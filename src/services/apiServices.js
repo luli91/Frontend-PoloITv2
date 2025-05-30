@@ -1,10 +1,13 @@
-
 import { API_CONFIG } from '../config/config';
 import { store } from '../redux/store';
 
+console.log('💡 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL); // Diagnóstico
+
 class ApiService {
     constructor(baseURL) {
-        this.baseURL = baseURL;
+        if (!baseURL) throw new Error('❌ baseURL is undefined');
+        this.baseURL = baseURL.replace('http://', 'https://');
+        console.log('✅ API Base URL (constructor):', this.baseURL);
     }
 
     getHeaders() {
@@ -22,9 +25,12 @@ class ApiService {
     }
 
     async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
-        const headers = this.getHeaders();
+        let url = `${this.baseURL}${endpoint}`;
+        if (url.startsWith('http://')) {
+            url = url.replace('http://', 'https://');
+        }
 
+        const headers = this.getHeaders();
         const config = {
             ...options,
             headers: {
@@ -51,10 +57,8 @@ class ApiService {
             let parsedData;
             try {
                 parsedData = responseText ? JSON.parse(responseText) : {};
-                console.log('📦 Parsed data:', parsedData);
             } catch (parseError) {
                 console.error('❌ Error parsing response:', parseError);
-                console.log('Raw response:', responseText);
                 parsedData = {};
             }
 
@@ -65,18 +69,13 @@ class ApiService {
                     detail: parsedData.detail || parsedData.message || 'Error del servidor',
                     data: parsedData
                 };
-                console.error('❌ Request failed:', errorData);
                 throw errorData;
             }
 
             return parsedData;
         } catch (error) {
-            if (error.status) {
-                // Ya es un error formateado por nosotros
-                throw error;
-            }
+            if (error.status) throw error;
 
-            // Error de red u otro error no manejado
             console.error('❌ Network or unhandled error:', error);
             throw {
                 status: 0,
