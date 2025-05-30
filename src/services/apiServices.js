@@ -1,36 +1,38 @@
 import { API_CONFIG } from '../config/config';
 import { store } from '../redux/store';
 
-console.log('💡 VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL); // Diagnóstico
-
 class ApiService {
-    constructor(baseURL) {
-        if (!baseURL) throw new Error('❌ baseURL is undefined');
-        this.baseURL = baseURL.replace('http://', 'https://');
-        console.log('✅ API Base URL (constructor):', this.baseURL);
-    }
-
     getHeaders() {
-        const token = store.getState().auth.token;
+        let token = store.getState().auth.token;
+
         const headers = {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
         };
 
         if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+            // Evita duplicar "Bearer Bearer ..."
+            if (!token.startsWith('Bearer ')) {
+                token = `Bearer ${token}`;
+            }
+
+            headers['Authorization'] = token;
+
+            // Solo en desarrollo
+            if (import.meta.env.DEV) {
+                console.log('🔑 Authorization Header:', headers['Authorization']);
+            }
+        } else {
+            console.warn('⚠️ No token found in store');
         }
 
         return headers;
     }
 
     async request(endpoint, options = {}) {
-        let url = `${this.baseURL}${endpoint}`;
-        if (url.startsWith('http://')) {
-            url = url.replace('http://', 'https://');
-        }
-
+        const url = `${API_CONFIG.BASE_URL}${endpoint}`;
         const headers = this.getHeaders();
+
         const config = {
             ...options,
             headers: {
