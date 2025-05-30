@@ -10,7 +10,7 @@ export const API_CONFIG = {
             PROFILE: '/usuarios/me',
         },
         USERS: {
-            GET: '/usuarios/',
+            GET: '/usuarios',
             DELETE: '/usuarios',
         }
     }
