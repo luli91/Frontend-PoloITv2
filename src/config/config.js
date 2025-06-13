@@ -2,7 +2,6 @@ export const API_CONFIG = {
 
     BASE_URL: import.meta.env.VITE_API_BASE_URL,
 
-
     ENDPOINTS: {
         AUTH: {
             LOGIN: '/usuarios/login',
@@ -10,7 +9,7 @@ export const API_CONFIG = {
             PROFILE: '/usuarios/me',
         },
         USERS: {
-            GET: '/usuarios',
+            GET: '/usuarios/',
             DELETE: '/usuarios',
         }
     }

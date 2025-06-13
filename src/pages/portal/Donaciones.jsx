@@ -23,7 +23,7 @@ export default function Donaciones() {
 
     const fetchDonaciones = () => {
         setLoadingDonaciones(true);
-        api.get('/donaciones')
+        api.get('/donaciones/')
             .then(res => setDonaciones(res))
             .catch(err => console.error('Error al listar donaciones', err))
             .finally(() => setLoadingDonaciones(false));
@@ -31,7 +31,7 @@ export default function Donaciones() {
 
 
     useEffect(() => {
-        api.get('/categorias')
+        api.get('/categorias/')
             .then(res => setCategorias(res))
             .catch(err => console.error('Error al cargar categorías', err));
 
