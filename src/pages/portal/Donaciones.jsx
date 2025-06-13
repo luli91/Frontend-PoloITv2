@@ -52,7 +52,7 @@ export default function Donaciones() {
     const handleSubmit = () => {
         if (!formData.descripcion || !formData.cantidad || !formData.categoria_id) return;
 
-        api.post('/donaciones', {
+        api.post('/donaciones/', {
             descripcion: formData.descripcion,
             cantidad: parseInt(formData.cantidad),
             categoria_id: formData.categoria_id
