@@ -2,15 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { Button } from 'primereact/button';
-import { Card } from 'primereact/card';
-import { Divider } from 'primereact/divider';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { api } from '../../services/apiServices';
-import { useToast } from '../../hooks/useToast'; // 👈 importá el hook
+import { useToast } from '../../hooks/useToast';
 import { ProgressSpinner } from 'primereact/progressspinner';
 
-
 export default function Donaciones() {
-    const toast = useToast(); // 👈 usá el hook
+    const toast = useToast();
     const [loadingDonaciones, setLoadingDonaciones] = useState(false);
 
     const [donaciones, setDonaciones] = useState([]);
@@ -21,6 +20,14 @@ export default function Donaciones() {
         categoria_id: ''
     });
 
+    const [selectedDonaciones, setSelectedDonaciones] = useState([]);
+    const [filters, setFilters] = useState({
+        descripcion: { value: '', matchMode: 'contains' },
+        cantidad: { value: '', matchMode: 'contains' },
+        categoria: { value: '', matchMode: 'contains' },
+        ubicacion: { value: '', matchMode: 'contains' },
+    });
+
     const fetchDonaciones = () => {
         setLoadingDonaciones(true);
         api.get('/donaciones/')
@@ -28,7 +35,6 @@ export default function Donaciones() {
             .catch(err => console.error('Error al listar donaciones', err))
             .finally(() => setLoadingDonaciones(false));
     };
-
 
     useEffect(() => {
         api.get('/categorias/')
@@ -73,57 +79,96 @@ export default function Donaciones() {
             });
     };
 
+    const headerTemplate = (data) => {
+        return (
+            <div className="flex align-items-center gap-2">
+                <span className="font-bold">Categoría: {data.categoria.nombre}</span>
+            </div>
+        );
+    };
+
+    const footerTemplate = (data) => {
+        // Calcular el total de las donaciones dentro del grupo de la categoría
+        const total = donaciones.filter(donacion => donacion.categoria.nombre === data.categoria.nombre).length;
+        return (
+            <React.Fragment>
+                <td colSpan="5">
+                    <div className="flex justify-content-end font-bold w-full">
+                        Total de Donaciones en {data.categoria.nombre}: {total}
+                    </div>
+                </td>
+            </React.Fragment>
+        );
+    };
+
+    const onSelectionChange = (e) => {
+        setSelectedDonaciones(e.value);
+    };
+
     return (
         <div className="p-4 max-w-5xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
 
-            <Card title="Nueva Donación" className="w-full md:w-[32rem] mx-auto mb-6 shadow-md">
-                <div className="flex flex-col gap-4">
-                    <span className="p-float-label">
-                        <InputText id="descripcion" name="descripcion" value={formData.descripcion} onChange={handleChange} />
-                        <label htmlFor="descripcion">Descripción</label>
-                    </span>
+            <div className="flex flex-col gap-4">
+                <span className="p-float-label">
+                    <InputText id="descripcion" name="descripcion" value={formData.descripcion} onChange={handleChange} />
+                    <label htmlFor="descripcion">Descripción</label>
+                </span>
 
-                    <span className="p-float-label">
-                        <InputText id="cantidad" name="cantidad" value={formData.cantidad} onChange={handleChange} keyfilter="int" />
-                        <label htmlFor="cantidad">Cantidad</label>
-                    </span>
+                <span className="p-float-label">
+                    <InputText id="cantidad" name="cantidad" value={formData.cantidad} onChange={handleChange} keyfilter="int" />
+                    <label htmlFor="cantidad">Cantidad</label>
+                </span>
 
-                    <span className="p-float-label">
-                        <Dropdown
-                            className="w-80"
-                            id="categoria_id"
-                            name="categoria_id"
-                            value={formData.categoria_id}
-                            options={categorias.map(c => ({ label: c.nombre, value: c.id }))}
-                            onChange={(e) => setFormData(prev => ({ ...prev, categoria_id: e.value }))}
-                            placeholder="Seleccionar categoría"
-                        />
-                        <label htmlFor="categoria_id">Categoría</label>
-                    </span>
+                <span className="p-float-label">
+                    <Dropdown
+                        className="w-80"
+                        id="categoria_id"
+                        name="categoria_id"
+                        value={formData.categoria_id}
+                        options={categorias.map(c => ({ label: c.nombre, value: c.id }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, categoria_id: e.value }))}
+                        placeholder="Seleccionar categoría"
+                    />
+                    <label htmlFor="categoria_id">Categoría</label>
+                </span>
 
-                    <Button label="Crear Donación" onClick={handleSubmit} />
-                </div>
-            </Card>
+                <Button label="Crear Donación" onClick={handleSubmit} />
+            </div>
 
-            <Divider />
-
-            <h2 className="text-2xl font-bold mb-4">Listado de Donaciones</h2>
+            <h2 className="text-2xl font-bold mb-4 mt-6">Listado de Donaciones</h2>
 
             {loadingDonaciones ? (
                 <div className="flex justify-center items-center h-40">
                     <ProgressSpinner style={{ width: '50px', height: '50px' }} />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {donaciones.map((donacion) => (
-                        <Card key={donacion.id} title={donacion.descripcion} subTitle={`Categoría: ${donacion.categoria?.nombre}`}>
-                            <p>Cantidad: {donacion.cantidad}</p>
-                            <p>Ubicación: {donacion.usuario?.ubicacion?.ciudad}, {donacion.usuario?.ubicacion?.provincia}</p>
-                            <p>Publicado: {donacion.tiene_publicacion ? 'Sí' : 'No'}</p>
-                        </Card>
-                    ))}
-                </div>
+                <DataTable
+                    value={donaciones}
+                    paginator
+                    rows={10}
+                    loading={loadingDonaciones}
+                    dataKey="id"
+                    groupRowsBy="categoria.nombre"
+                    rowGroupMode="subheader"
+                    sortMode="single"
+                    sortField="categoria.nombre"
+                    sortOrder={1}
+                    scrollable
+                    scrollHeight="400px"
+                    rowGroupHeaderTemplate={headerTemplate}
+                    rowGroupFooterTemplate={footerTemplate}
+                    selectionMode="multiple"
+                    selection={selectedDonaciones}
+                    onSelectionChange={onSelectionChange}
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: '3rem' }} />
+                    <Column field="descripcion" header="Descripción" filter filterPlaceholder="Buscar descripción" />
+                    <Column field="cantidad" header="Cantidad" filter filterPlaceholder="Buscar cantidad" />
+                    <Column field="categoria.nombre" header="Categoría" filter filterPlaceholder="Buscar categoría" />
+                    <Column field="usuario.ubicacion.ciudad" header="Ubicación" filter filterPlaceholder="Buscar ubicación" />
+                    <Column body={(rowData) => <span>{rowData.tiene_publicacion ? 'Sí' : 'No'}</span>} header="Publicado" />
+                </DataTable>
             )}
         </div>
     );
