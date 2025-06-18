@@ -20,6 +20,12 @@ const sidebarConfig = [
         key: 'donaciones',
         path: '/dashboard/donations'
 
+    },
+    {
+        label: 'Publicaciones',  
+        icon: 'pi pi-book',
+        key: 'publicaciones',
+        path: '/dashboard/publicaciones'
     }
 ];
 

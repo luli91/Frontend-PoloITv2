@@ -1,44 +1,73 @@
 
 import { api } from './apiServices.js';
 import { API_CONFIG } from '../config/config';
+import { store } from '../redux/store.js'; 
+import { setAuthToken } from "../redux/slices/authSlice.js";
 
 class AuthService {
     async login(credentials) {
-        try {
-            console.log('🔑 Iniciando login con:', {
-                email: credentials.email,
-                password: '********'
-            });
+    try {
+        console.log("🔑 Iniciando login con:", credentials);
 
-            const loginResponse = await api.post(API_CONFIG.ENDPOINTS.AUTH.LOGIN, credentials);
+        // Verificar el contenido del payload antes de enviarlo
+        console.log("📡 Payload enviado al backend:", JSON.stringify({
+            email: credentials.email,
+            password: credentials.password
+        }, null, 2));
 
-            if (!loginResponse || !loginResponse.access_token) {
-                throw new Error('No se recibió token en la respuesta');
-            }
+        const loginResponse = await api.post("/usuarios/login", {
+    email: credentials.email,
+    password: credentials.password
+});
 
-            const token = `Bearer ${loginResponse.access_token}`;
+if (!loginResponse || !loginResponse.access_token) {
+    throw new Error("⚠️ No se recibió token válido en la respuesta.");
+}
 
-            // Configurar headers para la siguiente petición
-            api.getHeaders = () => ({
-                'Content-Type': 'application/json',
-                'Authorization': token
-            });
+console.log("✅ Token recibido:", loginResponse.access_token);
 
-            // Obtener información del usuario
-            const userResponse = await api.get('/usuarios/me');
+// ✅ Guarda el token ANTES de cualquier otra acción
+localStorage.setItem("authToken", loginResponse.access_token);
+store.dispatch(setAuthToken(loginResponse.access_token));
 
-            return {
-                user: userResponse, // Devolvemos la respuesta completa del usuario
-                token
-            };
-        } catch (error) {
-            console.error('Error en login:', error);
-            throw {
-                message: error.message || 'Error en el inicio de sesión',
-                status: error.status || 500,
-                detail: error.detail || error.message
-            };
+console.log("👤 Token guardado, ahora obteniendo el perfil...");
+const userProfile = await this.getProfile();
+
+localStorage.setItem("user", JSON.stringify(userProfile));
+console.log("📌 User guardado en localStorage:", userProfile);
+
+return { user: userProfile, token: loginResponse.access_token };
+
+    } catch (error) {
+        console.error("❌ Error en login:", error);
+        throw error;
+    }
+}
+
+
+    async getProfile() {
+    try {
+        console.log(" Obteniendo perfil del usuario...");
+
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            throw new Error("⚠️ No hay token disponible, no se puede obtener el perfil.");
         }
+
+        const response = await api.get("/usuarios/me", {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!response) {
+            throw new Error("❌ No se pudo obtener el perfil del usuario.");
+        }
+
+        console.log("✅ Perfil obtenido:", response);
+        return response;
+    } catch (error) {
+        console.error("❌ Error al obtener perfil:", error);
+        throw error;
+    }
     }
 
     async register(userData) {

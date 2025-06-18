@@ -6,20 +6,25 @@ class ApiService {
     constructor(baseURL) {
         this.baseURL = baseURL;
     }
-
     getHeaders() {
-        const token = store.getState().auth.token;
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+    let token = localStorage.getItem("authToken");
+    
+    if (!token) {
+        console.warn("⚠️ Intentando obtener token antes de que se guarde. Posible primer intento.");
+        return {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        return headers;
     }
+
+    return {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+}
+
+
 
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
@@ -30,60 +35,23 @@ class ApiService {
             headers: {
                 ...headers,
                 ...options.headers,
+                "X-Forwarded-Proto": "https",
             },
+            mode: "cors",
         };
 
+        console.log("📡 Headers antes de la solicitud:", config.headers);
+
         try {
-            console.log('📡 Request:', {
-                url,
-                method: config.method,
-                headers: config.headers,
-                body: config.body ? JSON.parse(config.body) : undefined
-            });
-
             const response = await fetch(url, config);
-            const responseText = await response.text();
-
-            console.log('📥 Response status:', response.status);
-            console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
-            console.log('📥 Response body:', responseText);
-
-            let parsedData;
-            try {
-                parsedData = responseText ? JSON.parse(responseText) : {};
-                console.log('📦 Parsed data:', parsedData);
-            } catch (parseError) {
-                console.error('❌ Error parsing response:', parseError);
-                console.log('Raw response:', responseText);
-                parsedData = {};
-            }
-
             if (!response.ok) {
-                const errorData = {
-                    status: response.status,
-                    statusText: response.statusText,
-                    detail: parsedData.detail || parsedData.message || 'Error del servidor',
-                    data: parsedData
-                };
-                console.error('❌ Request failed:', errorData);
-                throw errorData;
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
 
-            return parsedData;
+            return await response.json();
         } catch (error) {
-            if (error.status) {
-                // Ya es un error formateado por nosotros
-                throw error;
-            }
-
-            // Error de red u otro error no manejado
-            console.error('❌ Network or unhandled error:', error);
-            throw {
-                status: 0,
-                statusText: 'Network Error',
-                detail: error.message || 'Error de conexión',
-                originalError: error
-            };
+            console.error("❌ Error en la solicitud:", error);
+            throw error;
         }
     }
 

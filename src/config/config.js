@@ -11,6 +11,14 @@ export const API_CONFIG = {
         USERS: {
             GET: '/usuarios/',
             DELETE: '/usuarios',
+        },
+        PUBLICACIONES: {  
+            BASE: '/publicaciones',
+            MY: '/publicaciones/mias',
+            ONE: (id) => `/publicaciones/${id}`,
+            EDIT: (id) => `/publicaciones/${id}`,
+            UPDATE_STATUS: (id) => `/publicaciones/${id}/estado`,
+            DELETE: (id) => `/publicaciones/${id}`
         }
     }
 };

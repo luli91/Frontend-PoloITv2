@@ -1,4 +1,4 @@
-// src/pages/dashboard/DashboardProfile.jsx
+import { useEffect, useState } from "react";
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
@@ -8,8 +8,16 @@ import { Divider } from 'primereact/divider';
 const DashboardProfile = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [userData, setUserData] = useState(null);
 
-    const userName = user?.nombre?.split(' ')[0] || 'Usuario';
+    useEffect(() => {
+        if (user) {
+            setUserData(user);
+            console.log("📌 Datos actualizados en DashboardProfile:", user);
+        }
+    }, [user]);
+    
+    // const userName = user?.nombre?.split(' ')[0] || 'Usuario';
 
     const handleEditProfile = () => {
         navigate('/editar-perfil');
