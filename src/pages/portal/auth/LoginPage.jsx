@@ -29,21 +29,21 @@ const LoginPage = () => {
         setError('');
         setLoading(true);
 
-        try {
-            const result = await handleLogin(formData.email, formData.password);
-            if (result.ok) {
-                navigate('/perfil');
-            } else {
-                // Manejo de error más específico
-                setError(formatErrorMessage(result.error));
-            }
-        } catch (error) {
-            // Función auxiliar para formatear el mensaje de error
-            setError(formatErrorMessage(error));
-        } finally {
-            setLoading(false);
+    try {
+        const result = await handleLogin(formData.email, formData.password);
+        
+        if (result.ok) {
+            console.log("✅ Login exitoso, intentando redirección...");
+            navigate('/perfil');
+        } else {
+            setError(formatErrorMessage(result.error));
         }
-    };
+    } catch (error) {
+        setError(formatErrorMessage(error));
+    } finally {
+        setLoading(false);
+    }
+};
 
     // Función auxiliar para formatear mensajes de error
     const formatErrorMessage = (error) => {
