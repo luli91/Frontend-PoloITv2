@@ -12,8 +12,14 @@ export const API_CONFIG = {
             GET: '/usuarios/',
             DELETE: '/usuarios',
         },
+        DONACIONES: {  
+            BASE: "/donaciones/",
+            ONE: (id) => `/donaciones/${id}`,
+            CREATE: "/donaciones",
+            DELETE: (id) => `/donaciones/${id}`
+        },
         PUBLICACIONES: {  
-            BASE: '/publicaciones',
+            BASE: '/publicaciones/',
             MY: '/publicaciones/mias',
             ONE: (id) => `/publicaciones/${id}`,
             EDIT: (id) => `/publicaciones/${id}`,
