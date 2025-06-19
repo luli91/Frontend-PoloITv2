@@ -68,7 +68,7 @@ export default function Donaciones() {
     const handleSubmit = () => {
         if (!formData.descripcion || !formData.cantidad || !formData.categoria_id) return;
 
-        api.post('/donaciones', {
+        api.post('/donaciones/', {
             descripcion: formData.descripcion,
             cantidad: parseInt(formData.cantidad),
             categoria_id: formData.categoria_id
@@ -125,6 +125,57 @@ export default function Donaciones() {
             </div>
         );
     };
+
+    const footerTemplate = (data) => {
+        // Calcular el total de las donaciones dentro del grupo de la categoría
+        const total = donaciones.filter(donacion => donacion.categoria.nombre === data.categoria.nombre).length;
+        return (
+            <React.Fragment>
+                <td colSpan="5">
+                    <div className="flex justify-content-end font-bold w-full">
+                        Total de Donaciones en {data.categoria.nombre}: {total}
+                    </div>
+                </td>
+            </React.Fragment>
+        );
+    };
+
+    const onSelectionChange = (e) => {
+        setSelectedDonaciones(e.value);
+    };
+
+    return (
+        <div className="p-4 max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
+
+            <div className="flex flex-col gap-4">
+                <span className="p-float-label">
+                    <InputText id="descripcion" name="descripcion" value={formData.descripcion} onChange={handleChange} />
+                    <label htmlFor="descripcion">Descripción</label>
+                </span>
+
+                <span className="p-float-label">
+                    <InputText id="cantidad" name="cantidad" value={formData.cantidad} onChange={handleChange} keyfilter="int" />
+                    <label htmlFor="cantidad">Cantidad</label>
+                </span>
+
+                <span className="p-float-label">
+                    <Dropdown
+                        className="w-80"
+                        id="categoria_id"
+                        name="categoria_id"
+                        value={formData.categoria_id}
+                        options={categorias.map(c => ({ label: c.nombre, value: c.id }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, categoria_id: e.value }))}
+                        placeholder="Seleccionar categoría"
+                    />
+                    <label htmlFor="categoria_id">Categoría</label>
+                </span>
+
+                <Button label="Crear Donación" onClick={handleSubmit} />
+            </div>
+
+            <h2 className="text-2xl font-bold mb-4 mt-6">Listado de Donaciones</h2>
 
     const footerTemplate = (data) => {
         // Calcular el total de las donaciones dentro del grupo de la categoría
