@@ -1,16 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import { InputText } from 'primereact/inputtext';
-import { Dropdown } from 'primereact/dropdown';
-import { Button } from 'primereact/button';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { api } from '../../services/apiServices';
-import { useToast } from '../../hooks/useToast'; // 👈 importá el hook
-import { ProgressSpinner } from 'primereact/progressspinner';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { listarDonaciones } from "../../redux/slices/donacionesSlice";
+import { publicacionesService } from "../../services/publicacionesServices";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Button } from "primereact/button";
+import { useToast } from "../../hooks/useToast";
+import { ProgressSpinner } from "primereact/progressspinner";
 
 export default function Donaciones() {
     const toast = useToast();
+    const dispatch = useDispatch();
+    const donaciones = useSelector(state => state.donaciones.lista);
+    const token = localStorage.getItem("authToken") || useSelector(state => state.auth.token);
     const [loadingDonaciones, setLoadingDonaciones] = useState(false);
+    const [selectedDonaciones, setSelectedDonaciones] = useState([]);
+
+    useEffect(() => {
+        dispatch(listarDonaciones());
+    }, [dispatch]);
+
+    const handleCrearPublicacion = () => {
+        if (!selectedDonaciones.length || !token) {
+            toast.current.show({
+                severity: "warn",
+                summary: "Atención",
+                detail: "Selecciona al menos una donación y verifica tu sesión",
+                life: 3000
 
     const [donaciones, setDonaciones] = useState([]);
     const [categorias, setCategorias] = useState([]);
@@ -77,6 +93,29 @@ export default function Donaciones() {
                     life: 3000
                 });
             });
+            return;
+        }
+
+        selectedDonaciones.forEach(donacion => {
+            publicacionesService.create(`Publicación sobre: ${donacion.descripcion}`, donacion.id, token)
+                .then(() => {
+                    toast.current.show({
+                        severity: "success",
+                        summary: "Publicación creada",
+                        detail: `Se generó publicación para la donación ID: ${donacion.id}`,
+                        life: 3000
+                    });
+                })
+                .catch(err => {
+                    console.error(`❌ Error al crear publicación para la donación ${donacion.id}`, err);
+                    toast.current.show({
+                        severity: "error",
+                        summary: "Error",
+                        detail: `No se pudo crear la publicación para la donación ${donacion.id}`,
+                        life: 3000
+                    });
+                });
+        });
     };
 
     const headerTemplate = (data) => {
@@ -107,6 +146,8 @@ export default function Donaciones() {
 
     return (
         <div className="p-4 max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Listado de Donaciones</h2>
+
             <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
 
             <div className="flex flex-col gap-4">
@@ -140,7 +181,7 @@ export default function Donaciones() {
 
             {loadingDonaciones ? (
                 <div className="flex justify-center items-center h-40">
-                    <ProgressSpinner style={{ width: '50px', height: '50px' }} />
+                    <ProgressSpinner style={{ width: "50px", height: "50px" }} />
                 </div>
             ) : (
                 <DataTable
@@ -149,6 +190,13 @@ export default function Donaciones() {
                     rows={10}
                     loading={loadingDonaciones}
                     dataKey="id"
+                    selectionMode="multiple"
+                    selection={selectedDonaciones}
+                    onSelectionChange={(e) => setSelectedDonaciones(e.value)}
+                    scrollable
+                    scrollHeight="400px"
+                >
+                    <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
                     groupRowsBy="categoria.nombre"
                     rowGroupMode="subheader"
                     sortMode="single"
@@ -167,9 +215,14 @@ export default function Donaciones() {
                     <Column field="cantidad" header="Cantidad" filter filterPlaceholder="Buscar cantidad" />
                     <Column field="categoria.nombre" header="Categoría" filter filterPlaceholder="Buscar categoría" />
                     <Column field="usuario.ubicacion.ciudad" header="Ubicación" filter filterPlaceholder="Buscar ubicación" />
+
                     <Column body={(rowData) => <span>{rowData.tiene_publicacion ? 'Sí' : 'No'}</span>} header="Publicado" />
                 </DataTable>
             )}
+
+            <div className="flex justify-end mt-4">
+                <Button label="Publicar Donación Seleccionada" onClick={handleCrearPublicacion} disabled={!selectedDonaciones.length} />
+            </div>
         </div>
     );
 }
