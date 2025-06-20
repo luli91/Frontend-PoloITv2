@@ -42,6 +42,7 @@ class ApiService {
         console.log("📡 Headers antes de la solicitud:", config.headers);
 
         try {
+
   const response = await fetch(url, config);
 
   if (!response.ok) {

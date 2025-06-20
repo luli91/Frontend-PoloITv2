@@ -23,6 +23,7 @@ export default function Donaciones() {
     }, [dispatch]);
 
     const handleCrearPublicacion = () => {
+
     if (!selectedDonaciones.length || !token) {
         toast.current.show({
             severity: "warn",
