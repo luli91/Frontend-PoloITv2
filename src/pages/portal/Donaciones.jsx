@@ -7,6 +7,8 @@ import { Column } from "primereact/column";
 import { Button } from "primereact/button";
 import { useToast } from "../../hooks/useToast";
 import { ProgressSpinner } from "primereact/progressspinner";
+import { getPublicaciones } from "../../redux/slices/publicacionesSlice";
+import FormularioDonacion from "../../components/FormularioDonacion";
 
 export default function Donaciones() {
     const toast = useToast();
@@ -21,40 +23,53 @@ export default function Donaciones() {
     }, [dispatch]);
 
     const handleCrearPublicacion = () => {
-        if (!selectedDonaciones.length || !token) {
+    if (!selectedDonaciones.length || !token) {
+        toast.current.show({
+            severity: "warn",
+            summary: "Atención",
+            detail: "Selecciona al menos una donación y verifica tu sesión",
+            life: 3000
+        });
+        return;
+    }
+
+    selectedDonaciones.forEach(async (donacion) => {
+        console.log("➡️ Enviando publicación con:", {
+      mensaje: `Publicación sobre: ${donacion.descripcion}`,
+      donacion_id: donacion.id,
+      token
+    });
+        try {
+            await publicacionesService.create(
+                `Publicación sobre: ${donacion.descripcion}`,
+                donacion.id,
+                token
+            );
+
+            dispatch(getPublicaciones()); // 🔥 Actualiza Redux con la nueva publicación
+
             toast.current.show({
-                severity: "warn",
-                summary: "Atención",
-                detail: "Selecciona al menos una donación y verifica tu sesión",
+                severity: "success",
+                summary: "Publicación creada",
+                detail: `Se generó publicación para la donación ID: ${donacion.id}`,
                 life: 3000
             });
-            return;
+        } catch (err) {
+            console.error(`❌ Error al crear publicación para la donación ${donacion.id}`, err);
+            toast.current.show({
+                severity: "error",
+                summary: "Error",
+                detail: `No se pudo crear la publicación para la donación ${donacion.id}`,
+                life: 3000
+            });
         }
-
-        selectedDonaciones.forEach(donacion => {
-            publicacionesService.create(`Publicación sobre: ${donacion.descripcion}`, donacion.id, token)
-                .then(() => {
-                    toast.current.show({
-                        severity: "success",
-                        summary: "Publicación creada",
-                        detail: `Se generó publicación para la donación ID: ${donacion.id}`,
-                        life: 3000
-                    });
-                })
-                .catch(err => {
-                    console.error(`❌ Error al crear publicación para la donación ${donacion.id}`, err);
-                    toast.current.show({
-                        severity: "error",
-                        summary: "Error",
-                        detail: `No se pudo crear la publicación para la donación ${donacion.id}`,
-                        life: 3000
-                    });
-                });
-        });
-    };
+    });
+};
 
     return (
         <div className="p-4 max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
+            <FormularioDonacion onDonacionCreada={() => dispatch(listarDonaciones())} />
             <h2 className="text-2xl font-bold mb-4">Listado de Donaciones</h2>
 
             {loadingDonaciones ? (
