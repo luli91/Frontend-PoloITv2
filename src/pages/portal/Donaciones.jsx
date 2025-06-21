@@ -10,6 +10,7 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { getPublicaciones } from "../../redux/slices/publicacionesSlice";
 import FormularioDonacion from "../../components/FormularioDonacion";
 
+
 export default function Donaciones() {
     const toast = useToast();
     const dispatch = useDispatch();
@@ -67,11 +68,44 @@ export default function Donaciones() {
     });
 };
 
+
     return (
         <div className="p-4 max-w-5xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
             <FormularioDonacion onDonacionCreada={() => dispatch(listarDonaciones())} />
+
             <h2 className="text-2xl font-bold mb-4">Listado de Donaciones</h2>
+
+            <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
+
+            <div className="flex flex-col gap-4">
+                <span className="p-float-label">
+                    <InputText id="descripcion" name="descripcion" value={formData.descripcion} onChange={handleChange} />
+                    <label htmlFor="descripcion">Descripción</label>
+                </span>
+
+                <span className="p-float-label">
+                    <InputText id="cantidad" name="cantidad" value={formData.cantidad} onChange={handleChange} keyfilter="int" />
+                    <label htmlFor="cantidad">Cantidad</label>
+                </span>
+
+                <span className="p-float-label">
+                    <Dropdown
+                        className="w-80"
+                        id="categoria_id"
+                        name="categoria_id"
+                        value={formData.categoria_id}
+                        options={categorias.map(c => ({ label: c.nombre, value: c.id }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, categoria_id: e.value }))}
+                        placeholder="Seleccionar categoría"
+                    />
+                    <label htmlFor="categoria_id">Categoría</label>
+                </span>
+
+                <Button label="Crear Donación" onClick={handleSubmit} />
+            </div>
+
+            <h2 className="text-2xl font-bold mb-4 mt-6">Listado de Donaciones</h2>
 
             {loadingDonaciones ? (
                 <div className="flex justify-center items-center h-40">
@@ -91,11 +125,13 @@ export default function Donaciones() {
                     scrollHeight="400px"
                 >
                     <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
+
                     <Column field="descripcion" header="Descripción" filter filterPlaceholder="Buscar descripción" />
                     <Column field="cantidad" header="Cantidad" filter filterPlaceholder="Buscar cantidad" />
                     <Column field="categoria.nombre" header="Categoría" filter filterPlaceholder="Buscar categoría" />
                     <Column field="usuario.ubicacion.ciudad" header="Ubicación" filter filterPlaceholder="Buscar ubicación" />
                     <Column body={(rowData) => <span>{rowData.tiene_publicacion ? "Sí" : "No"}</span>} header="Publicado" />
+
                 </DataTable>
             )}
 

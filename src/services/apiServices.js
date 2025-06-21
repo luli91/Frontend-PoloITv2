@@ -24,7 +24,6 @@ class ApiService {
 }
 
 
-
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         const headers = this.getHeaders();
@@ -41,7 +40,7 @@ class ApiService {
 
         console.log("📡 Headers antes de la solicitud:", config.headers);
 
-        try {
+ try {
 
   const response = await fetch(url, config);
 
@@ -60,6 +59,7 @@ class ApiService {
   }
 
 } catch (error) {
+
             console.error("❌ Error en la solicitud:", error);
             throw error;
         }
