@@ -1,36 +1,32 @@
+
 import { API_CONFIG } from '../config/config';
-import { store } from '../redux/store';
 
 class ApiService {
+    constructor(baseURL) {
+        this.baseURL = baseURL;
+    }
     getHeaders() {
-        let token = store.getState().auth.token;
-
-        const headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+    let token = localStorage.getItem("authToken");
+    
+    if (!token) {
+        console.warn("⚠️ Intentando obtener token antes de que se guarde. Posible primer intento.");
+        return {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         };
-
-        if (token) {
-            // Evita duplicar "Bearer Bearer ..."
-            if (!token.startsWith('Bearer ')) {
-                token = `Bearer ${token}`;
-            }
-
-            headers['Authorization'] = token;
-
-            // Solo en desarrollo
-            if (import.meta.env.DEV) {
-                console.log('🔑 Authorization Header:', headers['Authorization']);
-            }
-        } else {
-            console.warn('⚠️ No token found in store');
-        }
-
-        return headers;
     }
 
+    return {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`
+    };
+}
+
+
+
     async request(endpoint, options = {}) {
-        const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+        const url = `${this.baseURL}${endpoint}`;
         const headers = this.getHeaders();
 
         const config = {
@@ -38,53 +34,34 @@ class ApiService {
             headers: {
                 ...headers,
                 ...options.headers,
+                "X-Forwarded-Proto": "https",
             },
+            mode: "cors",
         };
 
+        console.log("📡 Headers antes de la solicitud:", config.headers);
+
         try {
-            console.log('📡 Request:', {
-                url,
-                method: config.method,
-                headers: config.headers,
-                body: config.body ? JSON.parse(config.body) : undefined
-            });
 
-            const response = await fetch(url, config);
-            const responseText = await response.text();
+  const response = await fetch(url, config);
 
-            console.log('📥 Response status:', response.status);
-            console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
-            console.log('📥 Response body:', responseText);
+  if (!response.ok) {
+    const errText = await response.text();  // capturamos el error más informativo
+    throw new Error(`HTTP ${response.status}: ${errText}`);
+  }
 
-            let parsedData;
-            try {
-                parsedData = responseText ? JSON.parse(responseText) : {};
-            } catch (parseError) {
-                console.error('❌ Error parsing response:', parseError);
-                parsedData = {};
-            }
+  const contentType = response.headers.get("Content-Type") || "";
+  if (contentType.includes("application/json")) {
+    return await response.json();
+  } else if (contentType.includes("text")) {
+    return await response.text();
+  } else {
+    return null; // para respuestas sin contenido o headers
+  }
 
-            if (!response.ok) {
-                const errorData = {
-                    status: response.status,
-                    statusText: response.statusText,
-                    detail: parsedData.detail || parsedData.message || 'Error del servidor',
-                    data: parsedData
-                };
-                throw errorData;
-            }
-
-            return parsedData;
-        } catch (error) {
-            if (error.status) throw error;
-
-            console.error('❌ Network or unhandled error:', error);
-            throw {
-                status: 0,
-                statusText: 'Network Error',
-                detail: error.message || 'Error de conexión',
-                originalError: error
-            };
+} catch (error) {
+            console.error("❌ Error en la solicitud:", error);
+            throw error;
         }
     }
 
