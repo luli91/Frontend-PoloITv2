@@ -1,6 +1,5 @@
 
 import { API_CONFIG } from '../config/config';
-import { store } from '../redux/store';
 
 class ApiService {
     constructor(baseURL) {
@@ -25,7 +24,6 @@ class ApiService {
 }
 
 
-
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
         const headers = this.getHeaders();
@@ -42,14 +40,26 @@ class ApiService {
 
         console.log("📡 Headers antes de la solicitud:", config.headers);
 
-        try {
-            const response = await fetch(url, config);
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
+ try {
 
-            return await response.json();
-        } catch (error) {
+  const response = await fetch(url, config);
+
+  if (!response.ok) {
+    const errText = await response.text();  // capturamos el error más informativo
+    throw new Error(`HTTP ${response.status}: ${errText}`);
+  }
+
+  const contentType = response.headers.get("Content-Type") || "";
+  if (contentType.includes("application/json")) {
+    return await response.json();
+  } else if (contentType.includes("text")) {
+    return await response.text();
+  } else {
+    return null; // para respuestas sin contenido o headers
+  }
+
+} catch (error) {
+
             console.error("❌ Error en la solicitud:", error);
             throw error;
         }
