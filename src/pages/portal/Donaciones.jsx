@@ -23,7 +23,6 @@ export default function Donaciones() {
     }, [dispatch]);
 
     const handleCrearPublicacion = () => {
-
     if (!selectedDonaciones.length || !token) {
         toast.current.show({
             severity: "warn",
@@ -33,12 +32,11 @@ export default function Donaciones() {
         });
         return;
     }
-
     selectedDonaciones.forEach(async (donacion) => {
         console.log("➡️ Enviando publicación con:", {
-      mensaje: `Publicación sobre: ${donacion.descripcion}`,
-      donacion_id: donacion.id,
-      token
+        mensaje: `Publicación sobre: ${donacion.descripcion}`,
+        donacion_id: donacion.id,
+        token
     });
         try {
             await publicacionesService.create(
@@ -47,7 +45,8 @@ export default function Donaciones() {
                 token
             );
 
-            dispatch(getPublicaciones()); // 🔥 Actualiza Redux con la nueva publicación
+            dispatch(getPublicaciones()); 
+            dispatch(listarDonaciones());
 
             toast.current.show({
                 severity: "success",
