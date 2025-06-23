@@ -197,7 +197,7 @@ const publicacionesSlice = createSlice({
             })
             .addCase(eliminarPublicacion.fulfilled, (state, action) => {
                 state.loading = false;
-                state.publicaciones = state.publicaciones.filter(pub => pub.id !== action.payload.id);
+                state.publicaciones = state.publicaciones.filter(pub => pub.id !== action.meta.arg);
             })
             .addCase(eliminarPublicacion.rejected, (state, action) => {
                 state.loading = false;
