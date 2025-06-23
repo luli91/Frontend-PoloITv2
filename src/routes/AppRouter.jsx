@@ -12,6 +12,7 @@ import RegisterPage from "../pages/portal/RegisterPage";
 import DashboardManageUsers from "../pages/admin/DashboardManageUsers.jsx";
 import Donaciones from  "../pages/portal/Donaciones.jsx"
 import Publicaciones from "../pages/portal/Publicaciones.jsx"
+import MisPublicaciones from "../pages/portal/MisPublicaciones.jsx";
 
 export default function AppRouter() {
     return (
@@ -32,6 +33,7 @@ export default function AppRouter() {
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="user-admin" element={<DashboardManageUsers />} />
                 <Route path="donations" element={<Donaciones />} />
+                <Route path="mis-publicaciones" element={<MisPublicaciones />} />
                 <Route path="publicaciones" element={<Publicaciones />} />
 
 
