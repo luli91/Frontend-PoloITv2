@@ -18,12 +18,14 @@ export const getMisPublicaciones = createAsyncThunk(
     "publicaciones/getMisPublicaciones",
     async (_, { rejectWithValue }) => {
         try {
-            return await publicacionesService.getMine();
+            const response = await publicacionesService.getMine();
+            return response.items; // 👈 solo devolvemos el array
         } catch (err) {
             return rejectWithValue(err.detail || "Error al obtener publicaciones del usuario");
         }
     }
 );
+
 
 //  Obtener detalles de una publicación específica
 export const getPublicacion = createAsyncThunk(

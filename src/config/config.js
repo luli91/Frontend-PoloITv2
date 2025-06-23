@@ -20,7 +20,7 @@ export const API_CONFIG = {
         },
         PUBLICACIONES: {  
             BASE: '/publicaciones/',
-            MY: '/publicaciones/mias',
+            MY: '/publicaciones/mis',
             ONE: (id) => `/publicaciones/${id}`,
             EDIT: (id) => `/publicaciones/${id}`,
             UPDATE_STATUS: (id) => `/publicaciones/${id}/estado`,
