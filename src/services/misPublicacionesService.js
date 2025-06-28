@@ -1,18 +1,54 @@
 import { api } from "./apiServices";
 import { API_CONFIG } from "../config/config";
 
+function _wrapError(error, contexto) {
+  console.error(`❌ Error en ${contexto}:`, error);
+  throw {
+    message: error.message || `Error en ${contexto}`,
+    status: error.status || 500,
+    detail: error.detail || error.message
+  };
+}
+
 export const misPublicacionesService = {
-  getPaginated: (page = 1, perPage = 10) =>
-    api.get(`${API_CONFIG.ENDPOINTS.PUBLICACIONES.MY}?page=${page}&per_page=${perPage}`),
-
-  editByDonacion: (donacionId, data) => {
-  const token = localStorage.getItem("authToken");
-  return api.put(API_CONFIG.ENDPOINTS.PUBLICACIONES.EDIT_BY_DONACION(donacionId), data, {
-    headers: {
-      Authorization: `Bearer ${token}`
+  async getPaginated(page = 1, perPage = 10) {
+    try {
+      return await api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.MY, {
+        page,
+        per_page: perPage,
+      });
+    } catch (error) {
+      _wrapError(error, "obtener publicaciones paginadas");
     }
-  });
-},
+  },
 
-  delete: (id) => api.delete(API_CONFIG.ENDPOINTS.PUBLICACIONES.DELETE(id)),
+  async editByDonacion(donacionId, data) {
+    try {
+      return await api.put(API_CONFIG.ENDPOINTS.PUBLICACIONES.EDIT_BY_DONACION(donacionId), data);
+    } catch (error) {
+      _wrapError(error, `editar publicación para donación ${donacionId}`);
+    }
+  },
+
+  async delete(id) {
+    try {
+      return await api.delete(API_CONFIG.ENDPOINTS.PUBLICACIONES.DELETE(id));
+    } catch (error) {
+      _wrapError(error, `eliminar publicación con ID ${id}`);
+    }
+  },
+
+  async uploadImage(publicacionId, file) {
+    try {
+      const formData = new FormData();
+      formData.append("archivo", file);
+
+      return await api.putMultipart(
+          API_CONFIG.ENDPOINTS.PUBLICACIONES.UPDATE_IMAGE(publicacionId),
+          formData
+      );
+    } catch (error) {
+      _wrapError(error, `subir imagen de publicación ${publicacionId}`);
+    }
+  },
 };

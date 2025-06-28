@@ -26,6 +26,7 @@ export const API_CONFIG = {
             DETAIL: '/publicaciones/detalle',
             EDIT_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
             GET_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
+            UPDATE_IMAGE: (publicacion_id) => `/publicaciones/${publicacion_id}/upload-imagen`,
         }
     }
 };

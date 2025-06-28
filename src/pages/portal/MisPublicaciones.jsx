@@ -4,6 +4,7 @@ import {
   getMisPublicacionesPaginated,
   actualizarMiPublicacion,
   eliminarMiPublicacion,
+  subirImagenPublicacion
 } from "../../redux/slices/misPublicacionesSlice";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -14,6 +15,7 @@ import { Button } from "primereact/button";
 import { ProgressSpinner } from "primereact/progressspinner";
 import { useToast } from "../../hooks/useToast";
 import { Dialog } from "primereact/dialog";
+import { FileUpload } from "primereact/fileupload";
 
 const ESTADOS = ["Pendiente", "Entregado", "Cancelado"];
 
@@ -136,6 +138,30 @@ export default function MisPublicaciones() {
     }
   };
 
+  const onCustomUpload = async (event, publicacionId) => {
+    const file = event.files[0];
+    console.log("➡️ Subiendo imagen para publicación", publicacionId, file);
+
+    try {
+      await dispatch(subirImagenPublicacion({ publicacionId, file })).unwrap();
+      toast.current.show({
+        severity: "success",
+        summary: "Imagen subida",
+        detail: `Imagen para publicación ${publicacionId} cargada.`,
+        life: 3000,
+      });
+      dispatch(getMisPublicacionesPaginated({ page: pageState + 1, perPage }));
+    } catch (error) {
+      console.error("❌ Error onCustomUpload thunk", error);
+      toast.current.show({
+        severity: "error",
+        summary: "Error",
+        detail: `No se pudo subir la imagen`,
+        life: 3000,
+      });
+    }
+  };
+
   return (
     <div className="p-4 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Mis Publicaciones</h2>
@@ -212,22 +238,33 @@ export default function MisPublicaciones() {
 
           {/* Eliminar y Ver */}
           <Column
-            header="Acciones"
-            body={(rowData) => (
-              <div className="flex gap-2">
-                <Button
-                  icon="pi pi-trash"
-                  className="p-button-danger p-button-sm" rounded outlined 
-                  onClick={() => handleEliminar(rowData.id)}
-                />
-                <Button
-                  icon="pi pi-eye"
-                  className="p-button-text p-button-sm"
-                  onClick={() => handleVerDetalle(rowData.id)}
-                  tooltip="Ver publicación"
-                />
-              </div>
-            )}
+              header="Acciones"
+              body={(rowData) => (
+                  <div className="flex gap-2 align-items-center">
+                    <Button
+                        icon="pi pi-trash"
+                        className="p-button-danger p-button-sm"
+                        rounded
+                        outlined
+                        onClick={() => handleEliminar(rowData.id)}
+                    />
+                    <Button
+                        icon="pi pi-eye"
+                        className="p-button-text p-button-sm"
+                        onClick={() => handleVerDetalle(rowData.id)}
+                        tooltip="Ver publicación"
+                    />
+                    <FileUpload
+                        mode="basic"
+                        name="archivo"
+                        accept="image/*"
+                        maxFileSize={1000000}
+                        customUpload
+                        uploadHandler={(e) => onCustomUpload(e, rowData.id)}
+                        chooseLabel="Subir imagen"
+                    />
+                  </div>
+              )}
           />
         </DataTable>
       )}

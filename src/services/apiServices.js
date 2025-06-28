@@ -1,90 +1,82 @@
+import axios from "axios";
+import { API_CONFIG } from "../config/config";
 
-import { API_CONFIG } from '../config/config';
+const DEBUG_MODE = false; // Activar si querés logs de requests
 
 class ApiService {
     constructor(baseURL) {
-        this.baseURL = baseURL;
-    }
-    getHeaders() {
-    let token = localStorage.getItem("authToken");
-    
-    if (!token) {
-        console.warn("⚠️ Intentando obtener token antes de que se guarde. Posible primer intento.");
-        return {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        };
-    }
-
-    return {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": `Bearer ${token}`
-    };
-}
-
-
-
-    async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
-        const headers = this.getHeaders();
-
-        const config = {
-            ...options,
+        this.client = axios.create({
+            baseURL,
             headers: {
-                ...headers,
-                ...options.headers,
+                "Content-Type": "application/json",
+                Accept: "application/json",
                 "X-Forwarded-Proto": "https",
             },
-            mode: "cors",
-        };
+        });
 
-        console.log("📡 Headers antes de la solicitud:", config.headers);
-
-        try {
-
-  const response = await fetch(url, config);
-
-  if (!response.ok) {
-    const errText = await response.text();  // capturamos el error más informativo
-    throw new Error(`HTTP ${response.status}: ${errText}`);
-  }
-
-  const contentType = response.headers.get("Content-Type") || "";
-  if (contentType.includes("application/json")) {
-    return await response.json();
-  } else if (contentType.includes("text")) {
-    return await response.text();
-  } else {
-    return null; // para respuestas sin contenido o headers
-  }
-
-} catch (error) {
-            console.error("❌ Error en la solicitud:", error);
-            throw error;
-        }
+        this._setInterceptors();
     }
 
-    get(endpoint) {
-        return this.request(endpoint, { method: 'GET' });
+    _setInterceptors() {
+        this.client.interceptors.request.use((config) => {
+            const token = localStorage.getItem("authToken");
+            if (token) {
+                config.headers["Authorization"] = `Bearer ${token}`;
+            }
+
+            if (DEBUG_MODE) {
+                console.log("📡 Request:", config.method?.toUpperCase(), config.url, config);
+            }
+
+            return config;
+        });
+
+        this.client.interceptors.response.use(
+            (response) => {
+                if (DEBUG_MODE) {
+                    console.log("✅ Response:", response);
+                }
+                return response;
+            },
+            (error) => {
+                console.error("❌ Error en Axios:", error);
+                return Promise.reject(error);
+            }
+        );
+    }
+
+    get(endpoint, params = {}) {
+        return this._handle(() => this.client.get(endpoint, { params }));
     }
 
     post(endpoint, data) {
-        return this.request(endpoint, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
+        return this._handle(() => this.client.post(endpoint, data));
     }
 
     put(endpoint, data) {
-        return this.request(endpoint, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        });
+        return this._handle(() => this.client.put(endpoint, data));
     }
 
     delete(endpoint) {
-        return this.request(endpoint, { method: 'DELETE' });
+        return this._handle(() => this.client.delete(endpoint));
+    }
+
+    putMultipart(endpoint, formData) {
+        return this._handle(() =>
+            this.client.put(endpoint, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            })
+        );
+    }
+
+    async _handle(requestFn) {
+        try {
+            const res = await requestFn();
+            return res.data;
+        } catch (error) {
+            // Acá podrías llamar a handleApiError("api", error);
+            throw error;
+        }
     }
 }
 

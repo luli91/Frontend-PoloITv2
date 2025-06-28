@@ -12,14 +12,27 @@ import FormularioDonacion from "../../components/FormularioDonacion";
 export default function Donaciones() {
   const toast = useToast();
   const dispatch = useDispatch();
-  const donaciones = useSelector((state) => state.donaciones.lista);
+  const { items = [], total = 0 } = useSelector((state) => state.donaciones.lista || {});
   const token = localStorage.getItem("authToken") || useSelector((state) => state.auth.token);
   const [loadingDonaciones, setLoadingDonaciones] = useState(false);
   const [selectedDonaciones, setSelectedDonaciones] = useState([]);
+  const [pagina, setPagina] = useState(0);
+  const [filasPorPagina, setFilasPorPagina] = useState(10);
 
+  // Carga inicial de donaciones
   useEffect(() => {
-    dispatch(listarDonaciones());
-  }, [dispatch]);
+    const fetchData = async () => {
+      try {
+        setLoadingDonaciones(true);
+        await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
+      } catch (err) {
+        console.error("❌ Error al cargar donaciones:", err);
+      } finally {
+        setLoadingDonaciones(false);
+      }
+    };
+    fetchData();
+  }, [dispatch, pagina, filasPorPagina]);
 
   const handleCrearPublicacion = () => {
     if (!selectedDonaciones.length || !token) {
@@ -49,8 +62,8 @@ export default function Donaciones() {
       }
 
       try {
-        await publicacionesService.create("n", donacion.id, token);
-        dispatch(listarDonaciones());
+        await publicacionesService.create("", donacion.id, token);
+        await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
 
         toast.current.show({
           severity: "success",
@@ -71,41 +84,80 @@ export default function Donaciones() {
   };
 
   return (
-    <div className="p-4 max-w-5xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
-      <FormularioDonacion onDonacionCreada={() => dispatch(listarDonaciones())} />
+      <div className="p-4 max-w-5xl mx-auto">
+        <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
+        <FormularioDonacion
+            onDonacionCreada={async () => {
+              try {
+                setLoadingDonaciones(true);
+                await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
+              } catch (err) {
+                console.error("❌ Error al refrescar después de crear donación:", err);
+              } finally {
+                setLoadingDonaciones(false);
+              }
+            }}
+        />
 
-      <h2 className="text-2xl font-bold mb-4">Listado de Donaciones</h2>
+        <h2 className="text-2xl font-bold mb-4">Listado de Donaciones</h2>
 
-      {loadingDonaciones ? (
-        <div className="flex justify-center items-center h-40">
-          <ProgressSpinner style={{ width: "50px", height: "50px" }} />
+        {loadingDonaciones ? (
+            <div className="flex justify-center items-center h-40">
+              <ProgressSpinner style={{ width: "50px", height: "50px" }} />
+            </div>
+        ) : (
+            <DataTable
+                value={items}
+                lazy
+                paginator
+                first={pagina * filasPorPagina}
+                rows={filasPorPagina}
+                totalRecords={total}
+                onPage={async (e) => {
+                  const nuevaPagina = e.first / e.rows;
+                  const nuevasFilas = e.rows;
+
+                  setPagina(nuevaPagina);
+                  setFilasPorPagina(nuevasFilas);
+
+                  try {
+                    setLoadingDonaciones(true);
+                    await dispatch(listarDonaciones({ page: nuevaPagina + 1, perPage: nuevasFilas })).unwrap();
+                  } catch (err) {
+                    console.error("❌ Error al paginar:", err);
+                  } finally {
+                    setLoadingDonaciones(false);
+                  }
+                }}
+                loading={loadingDonaciones}
+                dataKey="id"
+                selectionMode="multiple"
+                selection={selectedDonaciones}
+                onSelectionChange={(e) => setSelectedDonaciones(e.value)}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                tableStyle={{ minWidth: "50rem" }}
+                scrollable
+                scrollHeight="400px"
+            >
+              <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
+              <Column field="descripcion" header="Descripción" filter filterPlaceholder="Buscar descripción" />
+              <Column field="cantidad" header="Cantidad" filter filterPlaceholder="Buscar cantidad" />
+              <Column field="categoria.nombre" header="Categoría" filter filterPlaceholder="Buscar categoría" />
+              <Column field="usuario.ubicacion.ciudad" header="Ubicación" filter filterPlaceholder="Buscar ubicación" />
+              <Column
+                  body={(rowData) => <span>{rowData.tiene_publicacion ? "Sí" : "No"}</span>}
+                  header="Publicado"
+              />
+            </DataTable>
+        )}
+
+        <div className="flex justify-end mt-4">
+          <Button
+              label="Precarga de publicación"
+              onClick={handleCrearPublicacion}
+              disabled={!selectedDonaciones.length}
+          />
         </div>
-      ) : (
-        <DataTable
-          value={donaciones}
-          paginator
-          rows={10}
-          loading={loadingDonaciones}
-          dataKey="id"
-          selectionMode="multiple"
-          selection={selectedDonaciones}
-          onSelectionChange={(e) => setSelectedDonaciones(e.value)}
-          scrollable
-          scrollHeight="400px"
-        >
-          <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
-          <Column field="descripcion" header="Descripción" filter filterPlaceholder="Buscar descripción" />
-          <Column field="cantidad" header="Cantidad" filter filterPlaceholder="Buscar cantidad" />
-          <Column field="categoria.nombre" header="Categoría" filter filterPlaceholder="Buscar categoría" />
-          <Column field="usuario.ubicacion.ciudad" header="Ubicación" filter filterPlaceholder="Buscar ubicación" />
-          <Column body={(rowData) => <span>{rowData.tiene_publicacion ? "Sí" : "No"}</span>} header="Publicado" />
-        </DataTable>
-      )}
-
-      <div className="flex justify-end mt-4">
-        <Button label="Precarga de publicación" onClick={handleCrearPublicacion} disabled={!selectedDonaciones.length} />
       </div>
-    </div>
   );
 }
