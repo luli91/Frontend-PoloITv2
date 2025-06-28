@@ -21,10 +21,11 @@ export const API_CONFIG = {
         PUBLICACIONES: {  
             BASE: '/publicaciones/',
             MY: '/publicaciones/mis',
-            ONE: (id) => `/publicaciones/${id}`,
-            EDIT: (id) => `/publicaciones/${id}`,
-            UPDATE_STATUS: (id) => `/publicaciones/${id}/estado`,
-            DELETE: (id) => `/publicaciones/${id}`
+            DELETE: (id) => `/publicaciones/${id}`,
+            UPDATE_ESTADO: (id) => `/publicaciones/${id}/estado`,
+            DETAIL: '/publicaciones/detalle',
+            EDIT_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
+            GET_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
         }
     }
 };
