@@ -93,4 +93,16 @@ const misPublicacionesSlice = createSlice({
   },
 });
 
+export const subirImagenPublicacion = createAsyncThunk(
+    "misPublicaciones/uploadImage",
+    async ({ publicacionId, file }, { rejectWithValue }) => {
+        try {
+            return await misPublicacionesService.uploadImage(publicacionId, file);
+        } catch (err) {
+            return rejectWithValue(err.detail || "Error al subir la imagen");
+        }
+    }
+);
+
+
 export default misPublicacionesSlice.reducer;
