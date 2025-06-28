@@ -2,37 +2,19 @@ import { api } from "./apiServices";
 import { API_CONFIG } from "../config/config";
 
 export const publicacionesService = {
-    getAll: () => api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.BASE),
+  // 🔹 Para Publicaciones.jsx (vista pública paginada)
+  getDetalle: (page = 1, perPage = 10) =>
+    api.get(`${API_CONFIG.ENDPOINTS.PUBLICACIONES.DETAIL}?page=${page}&per_page=${perPage}`),
 
-    getMine: () => api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.MY),
+  // 🔹 Para Donaciones.jsx → verificar si una donación ya tiene publicación
+  getByDonacion: (donacionId) =>
+    api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.GET_BY_DONACION(donacionId)),
 
-    getById: (id) => api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.ONE(id)),
-
-    create: (mensaje, donacionId, token) => {
-        console.log("➡️ Intentando crear publicación con:", {
-            mensaje,
-            donacion_id: parseInt(donacionId),
-            token
-        });
-
-        return api.post(
-            API_CONFIG.ENDPOINTS.PUBLICACIONES.BASE, 
-            { mensaje, donacion_id: parseInt(donacionId) },
-            { headers: { Authorization: `Bearer ${token}` } }
-        )
-        .then(response => {
-            console.log("✅ Publicación creada con éxito:", response);
-            return response;
-        })
-        .catch(error => {
-            console.error("❌ Error al crear publicación:", error);
-            throw error;
-        });
-    },
-
-    edit: (id, data) => api.put(API_CONFIG.ENDPOINTS.PUBLICACIONES.EDIT(id), data),
-
-    updateStatus: (id, estado) => api.put(API_CONFIG.ENDPOINTS.PUBLICACIONES.UPDATE_STATUS(id), { estado }),
-
-    delete: (id) => api.delete(API_CONFIG.ENDPOINTS.PUBLICACIONES.DELETE(id))
+  // 🔹 Para Donaciones.jsx → crear una nueva publicación vacía/preliminar
+  create: (mensaje, donacionId, token) =>
+    api.post(
+      API_CONFIG.ENDPOINTS.PUBLICACIONES.BASE,
+      { mensaje, donacion_id: parseInt(donacionId), visible: false },
+      { headers: { Authorization: `Bearer ${token}` } }
+    ),
 };
