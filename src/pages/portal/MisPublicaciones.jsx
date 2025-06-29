@@ -1,324 +1,196 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+// MisPublicaciones.jsx
+import React, { useEffect, useState, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { Button } from 'primereact/button';
+import { Paginator } from 'primereact/paginator';
+import { Toast } from 'primereact/toast';
+import { Dialog } from 'primereact/dialog';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { InputSwitch } from 'primereact/inputswitch';
+import { Dropdown } from 'primereact/dropdown';
+import { FileUpload } from 'primereact/fileupload';
 import {
   getMisPublicacionesPaginated,
   actualizarMiPublicacion,
   eliminarMiPublicacion,
   subirImagenPublicacion
-} from "../../redux/slices/misPublicacionesSlice";
-import { DataTable } from "primereact/datatable";
-import { Column } from "primereact/column";
-import { InputText } from "primereact/inputtext";
-import { Dropdown } from "primereact/dropdown";
-import { Checkbox } from "primereact/checkbox";
-import { Button } from "primereact/button";
-import { ProgressSpinner } from "primereact/progressspinner";
-import { useToast } from "../../hooks/useToast";
-import { Dialog } from "primereact/dialog";
-import { FileUpload } from "primereact/fileupload";
+} from '../../redux/slices/misPublicacionesSlice';
+import { obtenerEstados } from '../../redux/slices/estadosSlice';
+import Estado from '../../models/Estado';
 
-const ESTADOS = ["Pendiente", "Entregado", "Cancelado"];
-
-export default function MisPublicaciones() {
+const MisPublicaciones = () => {
   const dispatch = useDispatch();
-  const toast = useToast();
-  const { items, loading, total, perPage } = useSelector(
-    (state) => state.misPublicaciones
-  );
-  const [pageState, setPageState] = useState(0);
-  const [gridData, setGridData] = useState([]);   
+  const toast = useRef(null);
+  const { items, total, loading, perPage = 10 } = useSelector((state) => state.misPublicaciones);
+  const { lista: listaEstadosRaw } = useSelector((state) => state.estados || { lista: [] });
+  const listaEstados = Estado.fromApiResponseArray(listaEstadosRaw);
+
+  const [page, setPage] = useState(0);
+  const [editandoId, setEditandoId] = useState(null);
+  const [mensajeEditado, setMensajeEditado] = useState('');
+  const [visibleEditado, setVisibleEditado] = useState(false);
+  const [estadoEditado, setEstadoEditado] = useState(null);
   const [detalle, setDetalle] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // 1) Carga inicial y re-carga de Redux → adaptar a local
   useEffect(() => {
-    dispatch(getMisPublicacionesPaginated({ page: pageState + 1, perPage }));
-  }, [dispatch, pageState, perPage]);
+    dispatch(getMisPublicacionesPaginated({ page: page + 1, perPage }));
+    dispatch(obtenerEstados());
+  }, [dispatch, page, perPage]);
 
-  // 2) Cada vez que items cambie, actualizo mi gridData
-  useEffect(() => {
-    setGridData(items);
-  }, [items]);
-
-  // 3) Snapshots para cancelar edición
-  const [originalRows, setOriginalRows] = useState({});
-
-  const onRowEditInit = (event) => {
-    setOriginalRows((prev) => ({
-      ...prev,
-      [event.data.id]: { ...event.data },
-    }));
+  const imageBodyTemplate = (rowData) => {
+    return rowData.imagen_url ? (
+        <img src={rowData.imagen_url} alt="img" width="64" className="shadow-4" />
+    ) : (
+        <span className="text-gray-400">Sin imagen</span>
+    );
   };
 
-  const onRowEditCancel = (event) => {
-    
-    setGridData((prev) => {
-      const data = [...prev];
-      const idx = data.findIndex((r) => r.id === event.data.id);
-      data[idx] = originalRows[event.data.id];
-      return data;
-    });
-    setOriginalRows((prev) => {
-      const copy = { ...prev };
-      delete copy[event.data.id];
-      return copy;
-    });
-  };
-
-  // 4) Guardar edición
-  const onRowEditSave = async (event) => {
-    const { id, mensaje, estado, visible, donacion } = event.data;
-    if (!mensaje.trim()) {
-      toast.current.show({
-        severity: "warn",
-        summary: "Mensaje requerido",
-        detail: "El mensaje no puede estar vacío.",
-        life: 3000,
-      });
-      return;
-    }
-
-    // 4.a) Actualizo la fila en la UI
-    setGridData((prev) => {
-      const data = [...prev];
-      const idx = data.findIndex((r) => r.id === id);
-      data[idx] = event.data; 
-      return data;
-    });
-
-    // 4.b) Envío al backend
-    try {
-      await dispatch(
-        actualizarMiPublicacion({
-          donacionId: donacion.id,
-          data: { mensaje, estado, visible, imagen_url: null },
-        })
-      ).unwrap();
-
-      toast.current.show({
-        severity: "success",
-        summary: "Actualizada",
-        detail: `Publicación ${id} actualizada.`,
-        life: 3000,
-      });
-
-      // Limpio snapshot
-      setOriginalRows((prev) => {
-        const copy = { ...prev };
-        delete copy[id];
-        return copy;
-      });
-    } catch (err) {
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: `No se pudo actualizar la publicación ${id}`,
-        life: 3000,
-      });
-      console.error("❌ update error:", err);
-    }
-  };
+  const visibleTemplate = (rowData) => (rowData.visible ? 'Sí' : 'No');
+  const estadoTemplate = (rowData) => rowData.estado?.nombre || rowData.estado_nombre || '—';
+  const descripcionDonacionTemplate = (rowData) => rowData.donacion?.descripcion || '—';
 
   const handleEliminar = (id) => {
     if (!window.confirm(`¿Eliminar publicación ${id}?`)) return;
-    dispatch(eliminarMiPublicacion(id));
+    dispatch(eliminarMiPublicacion(id)).then(() => {
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Eliminada',
+        detail: `Publicación ${id} eliminada`,
+        life: 3000
+      });
+      dispatch(getMisPublicacionesPaginated({ page: page + 1, perPage }));
+    });
   };
 
-  const handleVerDetalle = async (id) => {
+  const handleEditar = (data) => {
+    console.log("📦 Objeto recibido:", data);
+
+    setEditandoId(data.id);
+    setMensajeEditado(data.mensaje);
+    setVisibleEditado(data.visible);
+
+    let estado = null;
+
+    const nombreDesdeApi = data.estado?.nombre?.trim() || data.estado_nombre?.trim();
+    console.log("🟢 Estado actual en publicación:", nombreDesdeApi);
+
+    if (nombreDesdeApi) {
+      estado = listaEstados.find((e) => e.nombre.trim().toLowerCase() === nombreDesdeApi.toLowerCase());
+    }
+
+    console.log("🔄 Estado mapeado encontrado:", estado);
+    setEstadoEditado(estado || null);
+    setModalVisible(true);
+    setDetalle(data);
+  };
+
+  const handleGuardarEdicion = async () => {
     try {
-      const res = await publicacionesService.getById(id);
-      setDetalle(res);
-      setModalVisible(true);
+      await dispatch(
+          actualizarMiPublicacion({
+            publicacionId: editandoId,
+            data: {
+              mensaje: mensajeEditado,
+              visible: visibleEditado,
+              estado: estadoEditado?.nombre || ''
+            }
+          })
+      ).unwrap();
+      toast.current?.show({ severity: 'success', summary: 'Editada', detail: 'Publicación actualizada', life: 3000 });
+      setModalVisible(false);
+      dispatch(getMisPublicacionesPaginated({ page: page + 1, perPage }));
     } catch {
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "No se pudo cargar la publicación",
-      });
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo editar', life: 3000 });
     }
   };
 
-  const onCustomUpload = async (event, publicacionId) => {
+  const onCustomUpload = async (event) => {
     const file = event.files[0];
-    console.log("➡️ Subiendo imagen para publicación", publicacionId, file);
-
     try {
-      await dispatch(subirImagenPublicacion({ publicacionId, file })).unwrap();
-      toast.current.show({
-        severity: "success",
-        summary: "Imagen subida",
-        detail: `Imagen para publicación ${publicacionId} cargada.`,
-        life: 3000,
-      });
-      dispatch(getMisPublicacionesPaginated({ page: pageState + 1, perPage }));
-    } catch (error) {
-      console.error("❌ Error onCustomUpload thunk", error);
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: `No se pudo subir la imagen`,
-        life: 3000,
-      });
+      await dispatch(subirImagenPublicacion({ publicacionId: editandoId, file })).unwrap();
+      toast.current?.show({ severity: 'success', summary: 'Imagen subida', detail: 'Carga exitosa.', life: 3000 });
+      dispatch(getMisPublicacionesPaginated({ page: page + 1, perPage }));
+    } catch {
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo subir imagen.', life: 3000 });
     }
   };
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Mis Publicaciones</h2>
-      {loading ? (
-        <div className="flex justify-center items-center h-40">
-          <ProgressSpinner />
-        </div>
-      ) : (
-        <DataTable
-          value={gridData}                  
-          dataKey="id"
-          paginator
-          first={pageState * perPage}
-          rows={perPage}
-          totalRecords={total}
-          onPage={(e) => setPageState(e.page)}
-          editMode="row"
-          onRowEditInit={onRowEditInit}
-          onRowEditCancel={onRowEditCancel}
-          onRowEditSave={onRowEditSave}
-        >
-          <Column field="id" header="ID" />
+      <div className="card">
+        <Toast ref={toast} />
+        <h2>Mis Publicaciones</h2>
 
-          <Column
-            field="mensaje"
-            header="Mensaje"
-            editor={(options) => (
-              <InputText
-                value={options.value}
-                onChange={(e) => options.editorCallback(e.target.value)}
-              />
-            )}
-          />
-
-          <Column
-            field="estado"
-            header="Estado"
-            editor={(options) => (
-              <Dropdown
-                value={options.value}
-                options={ESTADOS}
-                onChange={(e) => options.editorCallback(e.value)}
-              />
-            )}
-          />
-
-          <Column
-            field="visible"
-            header="Visible"
-            body={(rowData) =>
-              rowData.visible ? (
-                <i className="pi pi-check text-green-500" />
-              ) : null
-            }
-            editor={(options) => (
-              <Checkbox
-                checked={options.value}
-                onChange={(e) => options.editorCallback(e.checked)}
-              />
-            )}
-          />
-
-          <Column
-            header="Donación"
-            body={(rowData) => <span>{rowData.donacion.descripcion}</span>}
-          />
-
-          {/* Íconos Guardar/Cancelar generados por PrimeReact */}
-          <Column
-            rowEditor
-            headerStyle={{ width: "5rem" }}
-            bodyStyle={{ textAlign: "center" }}
-          />
-
-          {/* Eliminar y Ver */}
+        <DataTable value={items} loading={loading} paginator={false} responsiveLayout="scroll">
+          <Column field="id" header="#" style={{ width: '50px' }} />
+          <Column header="Imagen" body={imageBodyTemplate} />
+          <Column field="mensaje" header="Mensaje" />
+          <Column header="Descripción Donación" body={descripcionDonacionTemplate} />
+          <Column header="Estado" body={estadoTemplate} />
+          <Column header="Visible" body={visibleTemplate} />
           <Column
               header="Acciones"
               body={(rowData) => (
-                  <div className="flex gap-2 align-items-center">
-                    <Button
-                        icon="pi pi-trash"
-                        className="p-button-danger p-button-sm"
-                        rounded
-                        outlined
-                        onClick={() => handleEliminar(rowData.id)}
-                    />
-                    <Button
-                        icon="pi pi-eye"
-                        className="p-button-text p-button-sm"
-                        onClick={() => handleVerDetalle(rowData.id)}
-                        tooltip="Ver publicación"
-                    />
-                    <FileUpload
-                        mode="basic"
-                        name="archivo"
-                        accept="image/*"
-                        maxFileSize={1000000}
-                        customUpload
-                        uploadHandler={(e) => onCustomUpload(e, rowData.id)}
-                        chooseLabel="Subir imagen"
-                    />
-                  </div>
+                  <>
+                    <Button icon="pi pi-pencil" className="p-button-sm p-button-text" onClick={() => handleEditar(rowData)} tooltip="Editar" />
+                    <Button icon="pi pi-trash" className="p-button-danger p-button-sm p-button-text" onClick={() => handleEliminar(rowData.id)} tooltip="Eliminar" />
+                  </>
               )}
           />
         </DataTable>
-      )}
 
-      <Dialog
-        header={`Publicación ${detalle?.id}`}
-        visible={modalVisible}
-        style={{ width: "50vw" }}
-        onHide={() => setModalVisible(false)}
-        modal
-        footer={
-          <div className="flex justify-end gap-2">
-            {detalle?.visible && (
-              <Button
-                label="Ver pública"
-                icon="pi pi-external-link"
-                className="p-button-text"
-                onClick={() =>
-                  window.open(`/publicaciones/${detalle.id}`, "_blank")
-                }
-              />
-            )}
-            <Button
-              label="Cerrar"
-              icon="pi pi-times"
-              className="p-button-text"
-              onClick={() => setModalVisible(false)}
+        <Paginator
+            first={page * perPage}
+            rows={perPage}
+            totalRecords={total}
+            onPageChange={(e) => setPage(e.page)}
+        />
+
+        <Dialog header="Editar publicación" visible={modalVisible} onHide={() => setModalVisible(false)} style={{ width: '50vw' }} modal>
+          <div className="space-y-3">
+            <label>Mensaje</label>
+            <InputTextarea value={mensajeEditado} onChange={(e) => setMensajeEditado(e.target.value)} rows={3} className="w-full" />
+
+            <div className="flex items-center gap-2">
+              <label>Visible</label>
+              <InputSwitch checked={visibleEditado} onChange={(e) => setVisibleEditado(e.value)} />
+            </div>
+
+            <label>Estado</label>
+            <Dropdown
+                value={estadoEditado}
+                options={listaEstados}
+                optionLabel="nombre"
+                optionValue="id"
+                onChange={(e) => {
+                  const seleccionado = listaEstados.find(est => est.id === e.value);
+                  console.log("🟡 Seleccionado en Dropdown:", seleccionado);
+                  setEstadoEditado(seleccionado);
+                }}
+                placeholder="Seleccioná un estado"
+                className="w-full"
             />
+
+            <label>Imagen</label>
+            <FileUpload
+                name="archivo"
+                accept="image/*"
+                maxFileSize={1000000}
+                customUpload
+                uploadHandler={onCustomUpload}
+                emptyTemplate={<p className="m-0">Arrastrá una imagen o hacé click para subir.</p>}
+            />
+
+            <div className="flex justify-end gap-2 mt-4">
+              <Button label="Guardar" icon="pi pi-save" onClick={handleGuardarEdicion} severity="success" />
+              <Button label="Cancelar" icon="pi pi-times" onClick={() => setModalVisible(false)} severity="secondary" />
+            </div>
           </div>
-        }
-      >
-        {detalle ? (
-          <div className="space-y-2">
-            <p>
-              <strong>Mensaje:</strong> {detalle.mensaje}
-            </p>
-            <p>
-              <strong>Estado:</strong> {detalle.estado}
-            </p>
-            <p>
-              <strong>Fecha:</strong>{" "}
-              {new Date(detalle.fecha_publicacion).toLocaleString()}
-            </p>
-            <p>
-              <strong>Visible:</strong> {detalle.visible ? "Sí" : "No"}
-            </p>
-            <p>
-              <strong>Donación:</strong> {detalle.donacion?.descripcion}
-            </p>
-          </div>
-        ) : (
-          <ProgressSpinner />
-        )}
-      </Dialog>
-    </div>
+        </Dialog>
+      </div>
   );
-}
+};
+
+export default MisPublicaciones;

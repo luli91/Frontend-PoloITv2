@@ -14,16 +14,23 @@ export const API_CONFIG = {
         },
         DONACIONES: {  
             BASE: "/donaciones/",
-            ONE: (id) => `/donaciones/${id}`,
+            ONE: (donacionId) => `/donaciones/${donacionId}`,
             CREATE: "/donaciones",
+            DELETE: (donacionId) => `/donaciones/${donacionId}`
+        },
+        ESTADOS: {
+            BASE: "/estados/",
+            UPDATE: (estadoId) => `/estados/${estadoId}`,
+            CREATE: "/estados/",
+            DELETE: (estadoId) => `/estados/${estadoId}`
             DELETE: (id) => `/donaciones/${id}`,
             UPDATE: (id) => `/donaciones/${id}`,
         },
         PUBLICACIONES: {  
             BASE: '/publicaciones/',
             MY: '/publicaciones/mis',
-            DELETE: (id) => `/publicaciones/${id}`,
-            UPDATE_ESTADO: (id) => `/publicaciones/${id}/estado`,
+            DELETE: (publicacionId) => `/publicaciones/${publicacionId}`,
+            UPDATE_ESTADO: (publicacionId) => `/publicaciones/${publicacionId}/estado`,
             DETAIL: '/publicaciones/detalle',
             EDIT_BY_PUBLICACION: (publicacionId) => `/publicaciones/${publicacionId}`,
             GET_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
