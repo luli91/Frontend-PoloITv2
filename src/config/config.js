@@ -16,15 +16,15 @@ export const API_CONFIG = {
             BASE: "/donaciones/",
             ONE: (donacionId) => `/donaciones/${donacionId}`,
             CREATE: "/donaciones",
-            DELETE: (donacionId) => `/donaciones/${donacionId}`
+            DELETE: (donacionId) => `/donaciones/${donacionId}`,
+            UPDATE: (donacionId) => `/donaciones/${donacionId}`,
+
         },
         ESTADOS: {
             BASE: "/estados/",
             UPDATE: (estadoId) => `/estados/${estadoId}`,
             CREATE: "/estados/",
             DELETE: (estadoId) => `/estados/${estadoId}`
-            DELETE: (id) => `/donaciones/${id}`,
-            UPDATE: (id) => `/donaciones/${id}`,
         },
         PUBLICACIONES: {  
             BASE: '/publicaciones/',

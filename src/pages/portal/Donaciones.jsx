@@ -9,8 +9,8 @@ import { useToast } from "../../hooks/useToast";
 import { ProgressSpinner } from "primereact/progressspinner";
 import FormularioDonacion from "../../components/FormularioDonacion";
 import { api } from "../../services/apiServices";
-import { InputText } from "primereact/inputtext";
-import { Dropdown } from "primereact/dropdown";
+import { Dialog } from "primereact/dialog";
+
 
 export default function Donaciones() {
   const toast = useToast();
@@ -21,8 +21,10 @@ export default function Donaciones() {
   const [selectedDonaciones, setSelectedDonaciones] = useState([]);
   const [pagina, setPagina] = useState(0);
   const [filasPorPagina, setFilasPorPagina] = useState(10);
-  const [originalRows, setOriginalRows] = useState({});
+  const [mostrarEditor, setMostrarEditor] = useState(false);
+  const [donacionSeleccionada, setDonacionSeleccionada] = useState(null);
   const [categorias, setCategorias] = useState([]);
+
 
   // Carga inicial de donaciones
   useEffect(() => {
@@ -211,7 +213,7 @@ return (
   <div className="p-4 max-w-5xl mx-auto">
     <h2 className="text-2xl font-bold mb-4">Crear Donación</h2>
     <FormularioDonacion
-      onDonacionCreada={async () => {
+      onGuardado={async () => {
         try {
           setLoadingDonaciones(true);
           await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
@@ -232,11 +234,7 @@ return (
     ) : (
       <DataTable
         value={items}
-        editMode="row"
         dataKey="id"
-        onRowEditInit={onRowEditInit}
-        onRowEditCancel={onRowEditCancel}
-        onRowEditSave={onRowEditSave}
         lazy
         paginator
         first={pagina * filasPorPagina}
@@ -269,45 +267,12 @@ return (
       >
         <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
 
-        <Column
-          field="descripcion"
-          header="Descripción"
-          editor={(options) => (
-            <InputText
-              value={options.value}
-              onChange={(e) => options.editorCallback(e.target.value)}
-            />
-          )}
-        />
-
-        <Column
-          field="cantidad"
-          header="Cantidad"
-          editor={(options) => (
-            <InputText
-              type="number"
-              value={options.value}
-              onChange={(e) =>
-                options.editorCallback(parseInt(e.target.value, 10))
-              }
-            />
-          )}
-        />
+        <Column field="descripcion" header="Descripción" />
+        <Column field="cantidad" header="Cantidad" />
 
         <Column
           field="categoria_id"
           header="Categoría"
-          editor={(options) => (
-            <Dropdown
-              value={options.value}
-              options={categorias.map((c) => ({
-                label: c.nombre,
-                value: c.id,
-              }))}
-              onChange={(e) => options.editorCallback(e.value)}
-              placeholder="Seleccionar categoría"
-            />
-          )}
           body={(rowData) => {
             const cat = categorias.find((c) => c.id === rowData.categoria_id);
             return cat?.nombre || "-";
@@ -323,9 +288,17 @@ return (
         />
 
         <Column
-          rowEditor
-          headerStyle={{ width: "5rem" }}
-          bodyStyle={{ textAlign: "center" }}
+          header="Editar"
+          body={(rowData) => (
+            <Button
+              icon="pi pi-pencil"
+              className="p-button-text p-button-sm"
+              onClick={() => {
+                setDonacionSeleccionada(rowData);
+                setMostrarEditor(true);
+              }}
+            />
+          )}
         />
 
         <Column
@@ -348,6 +321,35 @@ return (
         disabled={!selectedDonaciones.length}
       />
     </div>
+
+    {mostrarEditor && (
+      <Dialog
+        header="Editar Donación"
+        visible
+        modal
+        onHide={() => {
+          setMostrarEditor(false);
+          setDonacionSeleccionada(null);
+        }}
+        style={{ width: "60rem" }}
+      >
+        <FormularioDonacion
+          donacion={donacionSeleccionada}
+          onGuardado={async () => {
+            setMostrarEditor(false);
+            setDonacionSeleccionada(null);
+            try {
+              setLoadingDonaciones(true);
+              await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
+            } catch (err) {
+              console.error("❌ Error al refrescar donaciones:", err);
+            } finally {
+              setLoadingDonaciones(false);
+            }
+          }}
+        />
+      </Dialog>
+    )}
   </div>
 );
 }
