@@ -22,11 +22,11 @@ export const misPublicacionesService = {
     }
   },
 
-  async editByDonacion(donacionId, data) {
+  async editByPublicacion(publicacionId, data) {
     try {
-      return await api.put(API_CONFIG.ENDPOINTS.PUBLICACIONES.EDIT_BY_DONACION(donacionId), data);
+      return await api.put(API_CONFIG.ENDPOINTS.PUBLICACIONES.EDIT_BY_PUBLICACION(publicacionId), data);
     } catch (error) {
-      _wrapError(error, `editar publicación para donación ${donacionId}`);
+      _wrapError(error, `editar publicación para id ${publicacionId}`);
     }
   },
 

@@ -62,7 +62,7 @@ export default function Donaciones() {
       }
 
       try {
-        await publicacionesService.create("", donacion.id, token);
+        await publicacionesService.create("n", donacion.id, token);
         await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
 
         toast.current.show({

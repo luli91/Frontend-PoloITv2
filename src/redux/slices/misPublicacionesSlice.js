@@ -16,9 +16,9 @@ export const getMisPublicacionesPaginated = createAsyncThunk(
 // Editar publicación por donación
 export const actualizarMiPublicacion = createAsyncThunk(
   "misPublicaciones/editar",
-  async ({ donacionId, data }, { rejectWithValue }) => {
+  async ({ publicacionId, data }, { rejectWithValue }) => {
     try {
-      return await misPublicacionesService.editByDonacion(donacionId, data);
+      return await misPublicacionesService.editByPublicacion(publicacionId, data);
     } catch (err) {
       return rejectWithValue(err.detail || "Error al actualizar la publicación");
     }

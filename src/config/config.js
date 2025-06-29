@@ -24,9 +24,9 @@ export const API_CONFIG = {
             DELETE: (id) => `/publicaciones/${id}`,
             UPDATE_ESTADO: (id) => `/publicaciones/${id}/estado`,
             DETAIL: '/publicaciones/detalle',
-            EDIT_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
+            EDIT_BY_PUBLICACION: (publicacionId) => `/publicaciones/${publicacionId}`,
             GET_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
-            UPDATE_IMAGE: (publicacion_id) => `/publicaciones/${publicacion_id}/upload-imagen`,
+            UPDATE_IMAGE: (publicacionId) => `/publicaciones/${publicacionId}/upload-imagen`,
         }
     }
 };
