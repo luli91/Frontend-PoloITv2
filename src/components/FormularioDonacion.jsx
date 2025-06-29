@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { listarCategorias } from "../redux/slices/categoriasSlice";
 import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
@@ -7,7 +9,8 @@ import { api } from "../services/apiServices";
 
 export default function FormularioDonacion({ donacion = null, onGuardado }) {
   const toast = useToast();
-  const [categorias, setCategorias] = useState([]);
+  const categorias = useSelector((state) => state.categorias.items);
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     descripcion: "",
     cantidad: "",
@@ -16,17 +19,11 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
 
   // Cargar categorías
   useEffect(() => {
-    api.get("/categorias/")
-      .then(res => setCategorias(res))
-      .catch(() => {
-        toast.current.show({
-          severity: "error",
-          summary: "Error",
-          detail: "No se pudieron cargar las categorías",
-          life: 3000
-        });
-      });
-  }, []);
+  if (!categorias.length) {
+    dispatch(listarCategorias());
+  }
+}, [dispatch, categorias.length]);
+
 
   // Si es edición, precargar los valores
   useEffect(() => {

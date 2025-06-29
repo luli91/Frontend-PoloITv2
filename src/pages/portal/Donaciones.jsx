@@ -8,9 +8,8 @@ import { Button } from "primereact/button";
 import { useToast } from "../../hooks/useToast";
 import { ProgressSpinner } from "primereact/progressspinner";
 import FormularioDonacion from "../../components/FormularioDonacion";
-import { api } from "../../services/apiServices";
 import { Dialog } from "primereact/dialog";
-
+import { listarCategorias } from "../../redux/slices/categoriasSlice";
 
 export default function Donaciones() {
   const toast = useToast();
@@ -23,119 +22,35 @@ export default function Donaciones() {
   const [filasPorPagina, setFilasPorPagina] = useState(10);
   const [mostrarEditor, setMostrarEditor] = useState(false);
   const [donacionSeleccionada, setDonacionSeleccionada] = useState(null);
-  const [categorias, setCategorias] = useState([]);
+  const usuarioActual = useSelector((state) => state.auth.user);
+  const categorias = useSelector((state) => state.categorias.items);
 
 
-  // Carga inicial de donaciones
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoadingDonaciones(true);
-        await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
-      } catch (err) {
-        console.error("❌ Error al cargar donaciones:", err);
-      } finally {
-        setLoadingDonaciones(false);
+  const cargarDatos = async () => {
+    try {
+      setLoadingDonaciones(true);
+
+      // Cargar categorías si no estaban
+      if (!categorias.length) {
+        await dispatch(listarCategorias()).unwrap();
       }
-    };
-    fetchData();
-  }, [dispatch, pagina, filasPorPagina]);
 
-  useEffect(() => {
-  api.get("/categorias/")
-    .then((res) => setCategorias(res))
-    .catch(() => {
-      toast.current.show({
-        severity: "error",
-        summary: "Error",
-        detail: "No se pudieron cargar las categorías",
-        life: 3000,
-      });
-    });
-}, []);
-  const onRowEditInit = (event) => {
-  setOriginalRows((prev) => ({
-    ...prev,
-    [event.data.id]: { ...event.data },
-  }));
-};
+      // Luego de tener categorías, cargar donaciones
+      await dispatch(
+        listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })
+      ).unwrap();
+    } catch (err) {
+      console.error("❌ Error al cargar datos iniciales:", err);
+    } finally {
+      setLoadingDonaciones(false);
+    }
+  };
 
-const onRowEditCancel = (event) => {
-  const id = event.data.id;
-  setGridData((prev) => {
-    const data = [...prev];
-    const index = data.findIndex((item) => item.id === id);
-    data[index] = originalRows[id];
-    return data;
-  });
-  setOriginalRows((prev) => {
-    const copy = { ...prev };
-    delete copy[id];
-    return copy;
-  });
-};
+  cargarDatos();
+}, [dispatch, pagina, filasPorPagina]);
 
-const onRowEditSave = async (event) => {
-  const { id, descripcion, cantidad, categoria_id } = event.data;
-
-  console.log("💾 Guardando fila", event.data);
-  console.log("📦 Payload que se envía al backend:", {
-    descripcion,
-    cantidad: parseInt(cantidad, 10),
-    categoria_id: parseInt(categoria_id, 10),
-  });
-
-  if (!descripcion.trim() || isNaN(cantidad) || isNaN(categoria_id)) {
-    toast.current.show({
-      severity: "warn",
-      summary: "Datos requeridos",
-      detail: "Completá todos los campos antes de guardar.",
-      life: 3000,
-    });
-    return;
-  }
-
-  try {
-    
-    await dispatch(
-      actualizarDonacion({
-        id,
-        data: {
-          descripcion,
-          cantidad: parseInt(cantidad, 10),
-          categoria_id: parseInt(categoria_id, 10),
-        },
-        token,
-      })
-    ).unwrap();
-
-    toast.current.show({
-      severity: "success",
-      summary: "Actualizada",
-      detail: `Donación ${id} actualizada.`,
-      life: 3000,
-    });
-  } catch (err) {
-  const fallback =
-    err?.response?.data?.detail ||
-    err?.response?.data?.message ||
-    err?.message ||
-    "Error inesperado al guardar la donación.";
-
-  console.error("❌ Error al guardar donación (detalle):", fallback);
-  console.error("🧩 Error completo:", err);
-
-  toast.current.show({
-    severity: "error",
-    summary: "Error",
-    detail: fallback,
-    life: 4000,
-  });
-}
-
-};
-
-
+  
   const handleCrearPublicacion = () => {
     if (!selectedDonaciones.length || !token) {
       toast.current.show({
@@ -271,13 +186,14 @@ return (
         <Column field="cantidad" header="Cantidad" />
 
         <Column
-          field="categoria_id"
-          header="Categoría"
-          body={(rowData) => {
-            const cat = categorias.find((c) => c.id === rowData.categoria_id);
-            return cat?.nombre || "-";
-          }}
-        />
+  field="categoria_id"
+  header="Categoría"
+  body={(rowData) => {
+    const cat = categorias.find((c) => c.id === rowData.categoria_id);
+    return cat?.nombre || "-";
+  }}
+/>
+
 
         <Column field="usuario.ubicacion.ciudad" header="Ubicación" filter filterPlaceholder="Buscar ubicación" />
 
@@ -288,29 +204,34 @@ return (
         />
 
         <Column
-          header="Editar"
-          body={(rowData) => (
-            <Button
-              icon="pi pi-pencil"
-              className="p-button-text p-button-sm"
-              onClick={() => {
-                setDonacionSeleccionada(rowData);
-                setMostrarEditor(true);
-              }}
-            />
-          )}
-        />
+  header="Editar"
+  body={(rowData) =>
+    rowData.usuario?.id === usuarioActual?.id ? (
+      <Button
+        icon="pi pi-pencil"
+        className="p-button-text p-button-sm"
+        onClick={() => {
+          setDonacionSeleccionada(rowData);
+          setMostrarEditor(true);
+        }}
+      />
+    ) : null
+  }
+/>
 
-        <Column
-          header="Eliminar"
-          body={(rowData) => (
-            <Button
-              icon="pi pi-trash"
-              className="p-button-rounded p-button-danger p-button-text"
-              onClick={() => handleEliminar(rowData)}
-            />
-          )}
-        />
+<Column
+  header="Eliminar"
+  body={(rowData) =>
+    rowData.usuario?.id === usuarioActual?.id ? (
+      <Button
+        icon="pi pi-trash"
+        className="p-button-rounded p-button-danger p-button-text"
+        onClick={() => handleEliminar(rowData)}
+      />
+    ) : null
+  }
+/>
+
       </DataTable>
     )}
 
