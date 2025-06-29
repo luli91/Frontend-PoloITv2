@@ -26,9 +26,28 @@ export const listarDonaciones = createAsyncThunk(
     }
 );
 
+    export const actualizarDonacion = createAsyncThunk(
+  "donaciones/actualizarDonacion",
+  async ({ id, data, token }, { rejectWithValue }) => {
+    try {
+      const res = await donacionesService.update(id, data, token);
+      return res; // asegurate de retornar el objeto actualizado
+    } catch (err) {
+      console.error("❌ Error al actualizar donación (thunk):", err.response?.data || err.message);
+      return rejectWithValue(err.response?.data || "Error inesperado al actualizar");
+    }
+  }
+);
 
 
 
+export const eliminarDonacion = createAsyncThunk(
+  "donaciones/eliminarDonacion",
+  async ({ id, token }) => {
+    await donacionesService.delete(id, token);
+    return id;
+  }
+);
 
 
 // Slice de Redux
@@ -74,6 +93,15 @@ const donacionesSlice = createSlice({
             .addCase(listarDonaciones.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
+            })
+            .addCase(actualizarDonacion.fulfilled, (state, action) => {
+                const index = state.lista.items.findIndex((item) => item.id === action.payload.id);
+                    if (index !== -1) {
+                        state.lista.items[index] = action.payload;
+                     }
+            })
+            .addCase(eliminarDonacion.fulfilled, (state, action) => {
+                state.lista.items = state.lista.items.filter((item) => item.id !== action.payload);
             });
     },
 });

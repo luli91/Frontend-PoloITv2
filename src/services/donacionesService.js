@@ -26,4 +26,10 @@ export const donacionesService = {
         api.delete(API_CONFIG.ENDPOINTS.DONACIONES.DELETE(id), {
             headers: { Authorization: `Bearer ${token}` },
         }),
+
+    update: (id, data, token) =>
+        api.put(API_CONFIG.ENDPOINTS.DONACIONES.UPDATE(id),data,{
+             headers: { Authorization: `Bearer ${token}` } 
+            }),
+
 };

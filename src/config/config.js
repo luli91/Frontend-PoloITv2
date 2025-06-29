@@ -16,7 +16,8 @@ export const API_CONFIG = {
             BASE: "/donaciones/",
             ONE: (id) => `/donaciones/${id}`,
             CREATE: "/donaciones",
-            DELETE: (id) => `/donaciones/${id}`
+            DELETE: (id) => `/donaciones/${id}`,
+            UPDATE: (id) => `/donaciones/${id}`,
         },
         PUBLICACIONES: {  
             BASE: '/publicaciones/',
