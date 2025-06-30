@@ -80,10 +80,15 @@ const misPublicacionesSlice = createSlice({
             })
             .addCase(getMisPublicacionesPaginated.fulfilled, (state, action) => {
                 state.loading = false;
-                state.items = action.payload.items.map(item => ({
-                    ...item,
-                    estado_nombre: item.estado_nombre ?? item.estado?.nombre ?? null
-                }));
+                console.log("📥 Payload crudo:", action.payload.items);
+                state.items = action.payload.items.map(item => {
+    const estadoNombre = item.estado_nombre ?? item.estado?.nombre ?? null;
+    console.log("🧪 Mapeando item:", item.id, "→ estado_nombre:", estadoNombre);
+    return {
+      ...item,
+      estado_nombre: estadoNombre
+    };
+  });
                 state.total = action.payload.total;
                 state.page = action.payload.page;
                 state.perPage = action.payload.per_page;

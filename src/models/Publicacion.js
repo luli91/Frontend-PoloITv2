@@ -8,6 +8,7 @@ export class Publicacion {
         this.fecha_publicacion = data.fecha_publicacion || '';
         this.imagen_url = data.imagen_url || null;
         this.visible = !!data.visible;
+        this.estado_nombre = data.estado_nombre ?? data.estado?.nombre ?? null; 
         this.donacion = data.donacion ? Donacion.fromApiResponse(data.donacion) : null;
         this.estado = data.estado ? Estado.fromApiResponse(data.estado) : null;
     }
@@ -43,6 +44,7 @@ export class Publicacion {
             id: this.id,
             mensaje: this.mensaje,
             estado: this.estado,
+            estado_nombre: this.estado_nombre,
             fecha_publicacion: this.fecha_publicacion,
             imagen_url: this.imagen_url,
             visible: this.visible,
