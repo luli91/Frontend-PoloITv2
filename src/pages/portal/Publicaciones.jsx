@@ -18,6 +18,11 @@ export default function Publicaciones() {
     dispatch(getPublicacionesDetalle({ page: pageState + 1, perPage: detalle.perPage }));
   }, [dispatch, pageState]);
 
+  useEffect(() => {
+  console.log("📦 Store detalle completo:", detalle);
+  console.log("🔍 Items en detalle:", detalle.items);
+}, [detalle]);
+
   return (
     <div className="p-4 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Publicaciones actuales</h2>
@@ -45,17 +50,30 @@ export default function Publicaciones() {
           <Column field="donacion.descripcion" header="Donación" />
           <Column field="mensaje" header="Mensaje" />
           <Column
-            field="estado"
-            header="Estado"
-            body={(rowData) => <Tag value={rowData.estado} />}
-          />
-          <Column
-            field="fecha_publicacion"
-            header="Fecha publicación"
-            body={(rowData) =>
-              new Date(rowData.fecha_publicacion).toLocaleDateString()
-            }
-          />
+  header="Estado"
+  body={(rowData) => {
+    const estado = rowData.estado_nombre || '—';
+    let severity = 'info';
+
+    switch (estado.toLowerCase()) {
+      case 'activa':
+        severity = 'success';
+        break;
+      case 'pendiente':
+        severity = 'warning';
+        break;
+      case 'rechazada':
+      case 'entregada':
+        severity = 'danger';
+        break;
+      default:
+        severity = 'info';
+    }
+
+    return <Tag value={estado} severity={severity} />;
+  }}
+/>
+
           <Column field="donacion.usuario.nombre" header="Publicado por" />
         </DataTable>
       )}

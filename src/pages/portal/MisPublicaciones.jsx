@@ -19,11 +19,15 @@ import {
 } from '../../redux/slices/misPublicacionesSlice';
 import { obtenerEstados } from '../../redux/slices/estadosSlice';
 import Estado from '../../models/Estado';
+import { getPublicacionesDetalle } from '../../redux/slices/publicacionesSlice';
+import { misPublicacionesService } from '../../services/misPublicacionesService';
+
 
 const MisPublicaciones = () => {
   const dispatch = useDispatch();
   const toast = useRef(null);
   const { items, total, loading, perPage = 10 } = useSelector((state) => state.misPublicaciones);
+  console.log("🧾 Items en tabla:", items);
   const { lista: listaEstadosRaw } = useSelector((state) => state.estados || { lista: [] });
   const listaEstados = Estado.fromApiResponseArray(listaEstadosRaw);
 
@@ -49,7 +53,7 @@ const MisPublicaciones = () => {
   };
 
   const visibleTemplate = (rowData) => (rowData.visible ? 'Sí' : 'No');
-  const estadoTemplate = (rowData) => rowData.estado?.nombre || rowData.estado_nombre || '—';
+  const estadoTemplate = (rowData) => rowData.estado_nombre || '—';
   const descripcionDonacionTemplate = (rowData) => rowData.donacion?.descripcion || '—';
 
   const handleEliminar = (id) => {
@@ -66,46 +70,71 @@ const MisPublicaciones = () => {
   };
 
   const handleEditar = (data) => {
-    console.log("📦 Objeto recibido:", data);
+  console.log("📦 Objeto recibido:", data);
 
-    setEditandoId(data.id);
-    setMensajeEditado(data.mensaje);
-    setVisibleEditado(data.visible);
+  setEditandoId(data.id);
+  setMensajeEditado(data.mensaje);
+  setVisibleEditado(data.visible);
 
-    let estado = null;
+  const nombreDesdeApi = (data.estado_nombre || data.estado?.nombre || '').trim();
+  console.log("🟢 Estado actual en publicación:", nombreDesdeApi);
 
-    const nombreDesdeApi = data.estado?.nombre?.trim() || data.estado_nombre?.trim();
-    console.log("🟢 Estado actual en publicación:", nombreDesdeApi);
+  const estado = listaEstados.find((e) =>
+    e.nombre.trim().toLowerCase() === nombreDesdeApi.toLowerCase()
+  );
 
-    if (nombreDesdeApi) {
-      estado = listaEstados.find((e) => e.nombre.trim().toLowerCase() === nombreDesdeApi.toLowerCase());
-    }
+  console.log("🔄 Estado mapeado encontrado:", estado);
+  setEstadoEditado(estado || null);
+  setModalVisible(true);
+  setDetalle(data);
+};
 
-    console.log("🔄 Estado mapeado encontrado:", estado);
-    setEstadoEditado(estado || null);
-    setModalVisible(true);
-    setDetalle(data);
-  };
 
   const handleGuardarEdicion = async () => {
-    try {
-      await dispatch(
-          actualizarMiPublicacion({
-            publicacionId: editandoId,
-            data: {
-              mensaje: mensajeEditado,
-              visible: visibleEditado,
-              estado: estadoEditado?.nombre || ''
-            }
-          })
-      ).unwrap();
-      toast.current?.show({ severity: 'success', summary: 'Editada', detail: 'Publicación actualizada', life: 3000 });
-      setModalVisible(false);
-      dispatch(getMisPublicacionesPaginated({ page: page + 1, perPage }));
-    } catch {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: 'No se pudo editar', life: 3000 });
+  try {
+    // 📝 Editar mensaje y visibilidad (sin tocar el estado)
+    await dispatch(
+      actualizarMiPublicacion({
+        publicacionId: editandoId,
+        data: {
+          mensaje: mensajeEditado,
+          visible: visibleEditado
+        }
+      })
+    ).unwrap();
+
+    // 🟢 Si hay un estado seleccionado, lo actualizamos aparte
+    if (estadoEditado?.nombre) {
+      await misPublicacionesService.updateEstado(editandoId, estadoEditado.nombre);
+      console.log("🎯 Estado actualizado vía endpoint específico:", estadoEditado.nombre);
     }
-  };
+
+    // 🔄 Refrescamos desde backend para reflejar todo lo nuevo
+    await dispatch(getMisPublicacionesPaginated({ page: page + 1, perPage }));
+
+    if (visibleEditado === true) {
+      await dispatch(getPublicacionesDetalle({ page: 1, perPage: 10 }));
+    }
+
+    toast.current?.show({
+      severity: 'success',
+      summary: 'Editada',
+      detail: 'Publicación actualizada',
+      life: 3000
+    });
+
+    setModalVisible(false);
+  } catch (error) {
+    console.error("❌ Error al editar publicación:", error);
+    toast.current?.show({
+      severity: 'error',
+      summary: 'Error',
+      detail: 'No se pudo editar',
+      life: 3000
+    });
+  }
+};
+
 
   const onCustomUpload = async (event) => {
     const file = event.files[0];
@@ -128,7 +157,14 @@ const MisPublicaciones = () => {
           <Column header="Imagen" body={imageBodyTemplate} />
           <Column field="mensaje" header="Mensaje" />
           <Column header="Descripción Donación" body={descripcionDonacionTemplate} />
-          <Column header="Estado" body={estadoTemplate} />
+          <Column
+  header="Estado"
+  body={(rowData) => {
+    console.log("🧪 Estado recibido en fila:", rowData.estado_nombre);
+    return rowData.estado_nombre || '—';
+  }}
+/>
+
           <Column header="Visible" body={visibleTemplate} />
           <Column
               header="Acciones"

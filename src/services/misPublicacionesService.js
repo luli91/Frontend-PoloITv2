@@ -18,7 +18,7 @@ export const misPublicacionesService = {
         page,
         per_page: perPage,
       });
-
+      console.log("📨 Respuesta cruda del backend:", response);
       const publicaciones = Publicacion.fromApiResponseArray(response.items).map(p => p.toJSON()); // ⛑️ convertimos a POJO
 
       return {
@@ -68,4 +68,15 @@ export const misPublicacionesService = {
       _wrapError(error, `subir imagen de publicación ${publicacionId}`);
     }
   },
+
+  async updateEstado(publicacionId, nuevoEstado) {
+  try {
+    return await api.put(
+      API_CONFIG.ENDPOINTS.PUBLICACIONES.UPDATE_ESTADO(publicacionId),
+      { estado: nuevoEstado }
+    );
+  } catch (error) {
+    _wrapError(error, `actualizar estado de publicación ${publicacionId}`);
+  }
+},
 };

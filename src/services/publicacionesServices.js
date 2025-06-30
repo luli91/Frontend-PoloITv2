@@ -27,30 +27,43 @@ export const publicacionesService = {
   },
 
   async getByDonacion(donacionId) {
-    try {
-      return await api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.GET_BY_DONACION(donacionId));
-    } catch (error) {
-      _wrapError(error, `verificar publicación para donación ${donacionId}`);
+  try {
+    return await api.get(API_CONFIG.ENDPOINTS.PUBLICACIONES.GET_BY_DONACION(donacionId));
+  } catch (error) {
+    if (error?.response?.status === 404) {
+      return null; 
     }
-  },
+    _wrapError(error, `verificar publicación para donación ${donacionId}`);
+  }
+},
 
-  async create(mensaje, donacionId, token) {
-    try {
-      return await api.post(
-          API_CONFIG.ENDPOINTS.PUBLICACIONES.BASE,
-          {
-            mensaje,
-            donacion_id: parseInt(donacionId),
-            visible: false,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-      );
-    } catch (error) {
-      _wrapError(error, `crear publicación para donación ${donacionId}`);
-    }
-  },
-};
+
+async create(payload, token) {
+  try {
+    const data = await api.post(
+      API_CONFIG.ENDPOINTS.PUBLICACIONES.BASE,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+      console.log("✅ Publicación creada desde servicio:", data);
+    return data;
+  } catch (error) {
+       _wrapError(error, `crear publicación para donación ${payload?.donacion_id}`);
+  }
+},
+
+async update(publicacionId, data) {
+  try {
+    return await api.put(
+      API_CONFIG.ENDPOINTS.PUBLICACIONES.EDIT_BY_PUBLICACION(publicacionId),
+      data
+    );
+  } catch (error) {
+    _wrapError(error, `actualizar publicación ${publicacionId}`);
+  }
+}
+}
