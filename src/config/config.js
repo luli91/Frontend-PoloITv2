@@ -16,7 +16,9 @@ export const API_CONFIG = {
             BASE: "/donaciones/",
             ONE: (donacionId) => `/donaciones/${donacionId}`,
             CREATE: "/donaciones",
-            DELETE: (donacionId) => `/donaciones/${donacionId}`
+            DELETE: (donacionId) => `/donaciones/${donacionId}`,
+            UPDATE: (donacionId) => `/donaciones/${donacionId}`,
+
         },
         ESTADOS: {
             BASE: "/estados/",
@@ -33,6 +35,9 @@ export const API_CONFIG = {
             EDIT_BY_PUBLICACION: (publicacionId) => `/publicaciones/${publicacionId}`,
             GET_BY_DONACION: (donacionId) => `/publicaciones/por-donacion/${donacionId}`,
             UPDATE_IMAGE: (publicacionId) => `/publicaciones/${publicacionId}/upload-imagen`,
+        },
+        CATEGORIAS: {
+        GET_ALL: "/categorias/",
         }
     }
 };

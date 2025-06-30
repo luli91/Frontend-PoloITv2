@@ -4,6 +4,7 @@ import publicacionesReducer from "./slices/publicacionesSlice";
 import donacionesReducer from "./slices/donacionesSlice";
 import misPublicacionesReducer from "./slices/misPublicacionesSlice"
 import estadosReducer from "./slices/estadosSlice.js"
+import categoriasReducer from "./slices/categoriasSlice";
 
 export const store = configureStore({
     reducer: {
@@ -11,7 +12,8 @@ export const store = configureStore({
         publicaciones: publicacionesReducer,
         donaciones: donacionesReducer,
         misPublicaciones: misPublicacionesReducer,
-        estados: estadosReducer, // ✅ AGREGAR ESTA LÍNEA
+        estados: estadosReducer,
+        categorias: categoriasReducer,
     },
     devTools: process.env.NODE_ENV !== "production"
 });
