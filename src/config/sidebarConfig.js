@@ -1,0 +1,38 @@
+// src/config/sidebarConfig.js
+const sidebarConfig = [
+    {
+        label: 'Dashboard',
+        icon: 'pi pi-home',
+        path: '/dashboard'
+    },
+    {
+        label: 'Configuración',
+        icon: 'pi pi-cog',
+        key: 'configuracion',
+        children: [
+            { label: 'Perfil', icon: 'pi pi-user', path: '/dashboard/profile' },
+            { label: 'Administración de usuarios', icon: 'pi pi-users', path: '/dashboard/user-admin' }
+        ]
+    },
+    {
+        label: 'Donaciones',
+        icon: 'pi pi-heart',
+        key: 'donaciones',
+        path: '/dashboard/donations'
+
+    },
+    {
+        label: 'Mis Publicaciones',
+        icon: 'pi pi-palette',
+        key: 'mis-publicaciones',
+        path: '/dashboard/mis-publicaciones'
+    },
+    {
+        label: 'Publicaciones',  
+        icon: 'pi pi-book',
+        key: 'publicaciones',
+        path: '/dashboard/publicaciones'
+    }
+];
+
+export default sidebarConfig;
