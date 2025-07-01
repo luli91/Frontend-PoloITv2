@@ -9,9 +9,9 @@ const Sidebar = () => {
     return (
         <div className="w-[240px] h-screen flex flex-col bg-white border-r border-gray-200 shadow-sm">
             {/* Menú */}
+
             <div className="flex-1 overflow-y-auto p-3">
                 <div className="flex justify-center items-center px-4 py-4 border-b border-gray-100">
-                    <img src={redonaLogo} alt="Logo" className="h-8 w-auto object-contain" />
                 </div>
 
                 {sidebarConfig.map((item, index) => (
