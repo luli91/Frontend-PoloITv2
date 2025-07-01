@@ -11,6 +11,7 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
   const toast = useToast();
   const categorias = useSelector((state) => state.categorias.items);
   const dispatch = useDispatch();
+
   const [formData, setFormData] = useState({
     descripcion: "",
     cantidad: "",
@@ -35,6 +36,7 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
       });
     }
   }, [donacion]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,6 +91,7 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
         life: 3000
       });
     }
+
   };
 
   return (
@@ -100,6 +103,7 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
           value={formData.descripcion}
           onChange={handleChange}
         />
+
         <label htmlFor="descripcion">Descripción</label>
       </span>
 
@@ -111,6 +115,7 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
           onChange={handleChange}
           keyfilter="int"
         />
+
         <label htmlFor="cantidad">Cantidad</label>
       </span>
 
@@ -132,6 +137,7 @@ export default function FormularioDonacion({ donacion = null, onGuardado }) {
         icon={donacion ? "pi pi-save" : "pi pi-plus"}
         onClick={handleSubmit}
       />
+
     </div>
   );
 }

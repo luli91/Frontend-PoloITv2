@@ -69,6 +69,7 @@ export default function Donaciones() {
             life: 3000,
           });
           continue;
+
         }
 
         console.log("📤 Intentando crear publicación para:", donacion.id);
@@ -303,3 +304,4 @@ export default function Donaciones() {
       </div>
   );
 }
+
