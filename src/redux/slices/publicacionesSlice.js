@@ -1,101 +1,40 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { publicacionesService } from "../../services/publicacionesServices"; 
 
-//  Obtener todas las publicaciones visibles
-export const getPublicaciones = createAsyncThunk(
-    "publicaciones/getPublicaciones",
-    async (_, { rejectWithValue }) => {
-        try {
-            return await publicacionesService.getAll();
-        } catch (err) {
-            return rejectWithValue(err.detail || "Error al obtener publicaciones");
-        }
-    }
-);
+import { publicacionesService } from "../../services/publicacionesServices";
+import { notificacionesService } from "../../services/notificacionesService";
 
-//  Obtener publicaciones del usuario autenticado
-export const getMisPublicaciones = createAsyncThunk(
-    "publicaciones/getMisPublicaciones",
-    async (_, { rejectWithValue }) => {
-        try {
-            return await publicacionesService.getMine();
-        } catch (err) {
-            return rejectWithValue(err.detail || "Error al obtener publicaciones del usuario");
-        }
-    }
-);
-
-//  Obtener detalles de una publicación específica
-export const getPublicacion = createAsyncThunk(
-    "publicaciones/getPublicacion",
-    async (id, { rejectWithValue }) => {
-        try {
-            return await publicacionesService.getById(id);
-        } catch (err) {
-            return rejectWithValue(err.detail || "Error al obtener detalles de la publicación");
-        }
-    }
-);
-
-//  Crear nueva publicación
-export const crearPublicacion = createAsyncThunk(
-    "publicaciones/crearPublicacion",
+export const quieroDonar = createAsyncThunk(
+    "publicaciones/quieroDonar",
     async (donacionId, { rejectWithValue }) => {
         try {
-            console.log("➡️ Intentando crear publicación con donación ID:", donacionId);
-
-            const response = await publicacionesService.create(donacionId);
-
-            console.log("✅ Publicación creada con éxito:", response);
-            return response;
+            return await notificacionesService.enviarCorreo(donacionId);
         } catch (err) {
-            console.error("❌ Error al crear la publicación:", err);
-            return rejectWithValue(err.detail || "Error al crear la publicación");
+            console.error("❌ Error al enviar correo:", err);
+            return rejectWithValue(err.detail || "No se pudo enviar el correo");
         }
     }
 );
 
-
-//  Editar publicación
-export const editarPublicacion = createAsyncThunk(
-    "publicaciones/editarPublicacion",
-    async ({ id, data }, { rejectWithValue }) => {
+export const getPublicacionesDetalle = createAsyncThunk(
+    "publicaciones/getDetalle",
+    async ({ page = 1, perPage = 10 }, { rejectWithValue }) => {
         try {
-            return await publicacionesService.edit(id, data);
+            return await publicacionesService.getDetalle(page, perPage);
         } catch (err) {
-            return rejectWithValue(err.detail || "Error al editar la publicación");
-        }
-    }
-);
+            return rejectWithValue(err.detail || "Error al obtener publicaciones detalladas");
 
-//  Cambiar estado de publicación
-export const actualizarEstadoPublicacion = createAsyncThunk(
-    "publicaciones/actualizarEstadoPublicacion",
-    async ({ id, estado }, { rejectWithValue }) => {
-        try {
-            return await publicacionesService.updateStatus(id, estado);
-        } catch (err) {
-            return rejectWithValue(err.detail || "Error al actualizar el estado de la publicación");
-        }
-    }
-);
-
-//  Eliminar publicación
-export const eliminarPublicacion = createAsyncThunk(
-    "publicaciones/eliminarPublicacion",
-    async (id, { rejectWithValue }) => {
-        try {
-            return await publicacionesService.delete(id);
-        } catch (err) {
-            return rejectWithValue(err.detail || "Error al eliminar la publicación");
         }
     }
 );
 
 const initialState = {
-    publicaciones: [],
-    misPublicaciones: [],
-    publicacion: null,
+    detalle: {
+        items: [],
+        total: 0,
+        page: 1,
+        perPage: 10,
+    },
+
     loading: false,
     error: null,
 };
@@ -106,105 +45,26 @@ const publicacionesSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            //  Obtener todas las publicaciones visibles
-            .addCase(getPublicaciones.pending, (state) => {
+            .addCase(getPublicacionesDetalle.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(getPublicaciones.fulfilled, (state, action) => {
+            .addCase(getPublicacionesDetalle.fulfilled, (state, action) => {
                 state.loading = false;
-                state.publicaciones = action.payload;
+                state.detalle.items = action.payload.items;
+                state.detalle.total = action.payload.total;
+                state.detalle.page = action.payload.page;
+                state.detalle.perPage = action.payload.per_page;
+                state.detalle.pages = action.payload.pages;
+                state.detalle.has_next = action.payload.has_next;
+                state.detalle.has_prev = action.payload.has_prev;
             })
-            .addCase(getPublicaciones.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
+            .addCase(getPublicacionesDetalle.rejected, (state, action) => {
 
-            //  Obtener publicaciones del usuario autenticado
-            .addCase(getMisPublicaciones.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(getMisPublicaciones.fulfilled, (state, action) => {
-                state.loading = false;
-                state.misPublicaciones = action.payload;
-            })
-            .addCase(getMisPublicaciones.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-
-            //  Obtener detalles de una publicación específica
-            .addCase(getPublicacion.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(getPublicacion.fulfilled, (state, action) => {
-                state.loading = false;
-                state.publicacion = action.payload;
-            })
-            .addCase(getPublicacion.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-
-            //  Crear nueva publicación
-            .addCase(crearPublicacion.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(crearPublicacion.fulfilled, (state, action) => {
-                state.loading = false;
-                state.publicaciones.push(action.payload); // Agregar la nueva publicación a la lista
-            })
-            .addCase(crearPublicacion.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-
-            //  Editar publicación
-            .addCase(editarPublicacion.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(editarPublicacion.fulfilled, (state, action) => {
-                state.loading = false;
-                const index = state.publicaciones.findIndex(pub => pub.id === action.payload.id);
-                if (index !== -1) {
-                    state.publicaciones[index] = action.payload; // Actualizar publicación
-                }
-            })
-            .addCase(editarPublicacion.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-
-            //  Cambiar estado de publicación
-            .addCase(actualizarEstadoPublicacion.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(actualizarEstadoPublicacion.fulfilled, (state, action) => {
-                state.loading = false;
-                const index = state.publicaciones.findIndex(pub => pub.id === action.payload.id);
-                if (index !== -1) {
-                    state.publicaciones[index].estado = action.payload.estado; // Actualizar estado
-                }
-            })
-            .addCase(actualizarEstadoPublicacion.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-
-            //  Eliminar publicación
-            .addCase(eliminarPublicacion.pending, (state) => {
-                state.loading = true;
-            })
-            .addCase(eliminarPublicacion.fulfilled, (state, action) => {
-                state.loading = false;
-                state.publicaciones = state.publicaciones.filter(pub => pub.id !== action.payload.id);
-            })
-            .addCase(eliminarPublicacion.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });
     },
 });
-
 
 export default publicacionesSlice.reducer;

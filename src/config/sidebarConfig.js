@@ -22,6 +22,12 @@ const sidebarConfig = [
 
     },
     {
+        label: 'Mis Publicaciones',
+        icon: 'pi pi-palette',
+        key: 'mis-publicaciones',
+        path: '/dashboard/mis-publicaciones'
+    },
+    {
         label: 'Publicaciones',  
         icon: 'pi pi-book',
         key: 'publicaciones',

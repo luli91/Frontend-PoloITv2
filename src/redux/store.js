@@ -2,12 +2,18 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import publicacionesReducer from "./slices/publicacionesSlice";
 import donacionesReducer from "./slices/donacionesSlice";
+import misPublicacionesReducer from "./slices/misPublicacionesSlice"
+import estadosReducer from "./slices/estadosSlice.js"
+import categoriasReducer from "./slices/categoriasSlice";
 
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         publicaciones: publicacionesReducer,
         donaciones: donacionesReducer,
+        misPublicaciones: misPublicacionesReducer,
+        estados: estadosReducer,
+        categorias: categoriasReducer,
     },
     devTools: process.env.NODE_ENV !== "production"
 });
