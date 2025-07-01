@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
 import { publicacionesService } from "../../services/publicacionesServices";
 import { notificacionesService } from "../../services/notificacionesService";
 
@@ -21,6 +22,7 @@ export const getPublicacionesDetalle = createAsyncThunk(
             return await publicacionesService.getDetalle(page, perPage);
         } catch (err) {
             return rejectWithValue(err.detail || "Error al obtener publicaciones detalladas");
+
         }
     }
 );
@@ -32,6 +34,7 @@ const initialState = {
         page: 1,
         perPage: 10,
     },
+
     loading: false,
     error: null,
 };
@@ -57,6 +60,7 @@ const publicacionesSlice = createSlice({
                 state.detalle.has_prev = action.payload.has_prev;
             })
             .addCase(getPublicacionesDetalle.rejected, (state, action) => {
+
                 state.loading = false;
                 state.error = action.payload;
             });

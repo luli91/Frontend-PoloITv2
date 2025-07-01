@@ -1,12 +1,12 @@
 import axios from "axios";
 import { API_CONFIG } from "../config/config";
-
-const DEBUG_MODE = false; // Activar si querés logs de requests
+const DEBUG_MODE = false; 
 
 class ApiService {
     constructor(baseURL) {
         this.client = axios.create({
             baseURL,
+
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
@@ -43,6 +43,7 @@ class ApiService {
                 return Promise.reject(error);
             }
         );
+
     }
 
     get(endpoint, params = {}) {

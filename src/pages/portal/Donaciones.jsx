@@ -130,7 +130,14 @@ export default function Donaciones() {
       summary: "Donación eliminada",
       detail: `Se eliminó correctamente la donación ID: ${donacion.id}`,
       life: 3000,
+
     });
+        try {
+            await publicacionesService.create(
+                `Publicación sobre: ${donacion.descripcion}`,
+                donacion.id,
+                token
+            );
 
     // Refrescar la lista de donaciones
     await dispatch(listarDonaciones({ page: pagina + 1, perPage: filasPorPagina })).unwrap();
@@ -294,4 +301,5 @@ return (
     )}
   </div>
 );
+
 }
