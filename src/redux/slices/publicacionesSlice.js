@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
 import { publicacionesService } from "../../services/publicacionesServices";
 import { notificacionesService } from "../../services/notificacionesService";
 
