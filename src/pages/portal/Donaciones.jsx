@@ -115,6 +115,7 @@ export default function Donaciones() {
           life: 3000,
         });
       }
+
     }
   };
 
@@ -304,4 +305,5 @@ export default function Donaciones() {
       </div>
   );
 }
+
 
