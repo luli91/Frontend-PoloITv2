@@ -196,14 +196,13 @@ const MisPublicaciones = () => {
 
             <label>Estado</label>
             <Dropdown
-                value={estadoEditado}
+                value={estadoEditado?.id || null}
                 options={listaEstados}
                 optionLabel="nombre"
                 optionValue="id"
                 onChange={(e) => {
-                  const seleccionado = listaEstados.find(est => est.id === e.value);
-                  console.log("🟡 Seleccionado en Dropdown:", seleccionado);
-                  setEstadoEditado(seleccionado);
+                    const seleccionado = listaEstados.find(est => est.id === e.value);
+                    setEstadoEditado(seleccionado);
                 }}
                 placeholder="Seleccioná un estado"
                 className="w-full"

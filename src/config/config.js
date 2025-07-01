@@ -37,7 +37,11 @@ export const API_CONFIG = {
             UPDATE_IMAGE: (publicacionId) => `/publicaciones/${publicacionId}/upload-imagen`,
         },
         CATEGORIAS: {
-        GET_ALL: "/categorias/",
+            GET_ALL: "/categorias/",
+        },
+        NOTIFICACIONES: {
+            ENVIAR: "/notificaciones/donacion"
+
         }
     }
 };
