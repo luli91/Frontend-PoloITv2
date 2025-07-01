@@ -1,6 +1,10 @@
 // src/pages/dashboard/DashboardHome.jsx
 import React, { useState } from 'react';
 import { OrganizationChart } from 'primereact/organizationchart';
+import { Avatar } from 'primereact/avatar';
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 const DashboardHome = () => {
     const [data] = useState([
@@ -22,7 +26,7 @@ const DashboardHome = () => {
                     data: {
                         image: 'https://primefaces.org/cdn/primereact/images/avatar/stephenshaw.png',
                         name: 'Alfredo',
-                        title: 'FullStack / Analista'
+                        title: 'FullStack / Devops'
                     }
                 },
                 {
@@ -32,7 +36,7 @@ const DashboardHome = () => {
                     data: {
                         image: 'https://primefaces.org/cdn/primereact/images/avatar/annafali.png',
                         name: 'María Soledad',
-                        title: 'UX / Tester'
+                        title: 'UX / UI'
                     }
                 },
                 {
@@ -54,6 +58,16 @@ const DashboardHome = () => {
                         name: 'Helga',
                         title: 'Backend'
                     }
+                },
+                {
+                    type: 'person',
+                    className: 'bg-purple-500 text-white',
+                    style: { borderRadius: '12px' },
+                    data: {
+                        image: 'https://primefaces.org/cdn/primereact/images/avatar/onyamalimba.png',
+                        name: 'Matias',
+                        title: 'QA'
+                    }
                 }
             ]
         }
@@ -61,24 +75,26 @@ const DashboardHome = () => {
 
     const nodeTemplate = (node) => {
         if (node.type === 'person') {
+            const initial = node.data.name.charAt(0).toUpperCase();
+
             return (
                 <div style={{ textAlign: 'center' }}>
-                    <img
-                        alt={node.data.name}
-                        src={node.data.image}
+                    <Avatar
+                        label={initial}
+                        className={`${node.className} shadow-md`}
                         style={{
                             width: '48px',
                             height: '48px',
-                            borderRadius: '50%',
-                            marginBottom: '8px',
-                            border: '2px solid white',
-                            boxShadow: '0 0 4px rgba(0,0,0,0.2)'
+                            fontWeight: 'bold',
+                            fontSize: '1.2rem',
+                            marginBottom: '8px'
                         }}
+                        shape="circle"
                     />
                     <div
                         style={{
                             backgroundColor: 'white',
-                            color: '#1f2937', // gris oscuro
+                            color: '#1f2937',
                             padding: '6px 12px',
                             borderRadius: '8px',
                             boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
@@ -92,7 +108,6 @@ const DashboardHome = () => {
             );
         }
 
-        // para nodos de texto (no persona)
         return (
             <div
                 style={{
@@ -108,7 +123,6 @@ const DashboardHome = () => {
             </div>
         );
     };
-
 
     return (
         <div className="card overflow-x-auto">
