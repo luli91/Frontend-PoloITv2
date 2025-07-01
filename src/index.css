@@ -1,7 +1,39 @@
 /* Importaciones de Tailwind */
-@import "tailwindcss";
-
+/* Base styles */
+@tailwind base;
+@tailwind components;
 @tailwind utilities;
+
+/* PrimeReact Custom Styles */
+.p-component {
+    /* Evitar que Tailwind afecte a los componentes de Prime */
+    font-family: inherit;
+}
+
+/* Custom layer para manejar conflictos */
+@layer components {
+    /* Aquí puedes sobrescribir estilos específicos de PrimeReact si es necesario */
+    .p-button {
+        @apply focus:ring-2 focus:ring-offset-2;
+    }
+}
+
+/* Variables personalizadas de PrimeReact */
+:root {
+    --surface-ground: #f8f9fa;
+    --surface-overlay: #ffffff;
+    --surface-border: #dee2e6;
+    --surface-card: #ffffff;
+}
+
+
+
+/* PrimeReact Custom Styles */
+.p-component {
+    /* Evitar que Tailwind afecte a los componentes de Prime */
+    font-family: inherit;
+}
+
 
 
 /* Estilos base */
