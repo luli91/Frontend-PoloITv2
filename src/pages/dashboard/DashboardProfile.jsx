@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from 'primereact/card';
@@ -8,19 +7,9 @@ import { Divider } from 'primereact/divider';
 const DashboardProfile = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [userData, setUserData] = useState(null);
 
-    useEffect(() => {
-        if (user) {
-            setUserData(user);
-            console.log("📌 Datos actualizados en DashboardProfile:", user);
-        }
-    }, [user]);
-    
-    // const userName = user?.nombre?.split(' ')[0] || 'Usuario';
-
-    const handleEditProfile = () => {
-        navigate('/editar-perfil');
+    const handleEditLocation = () => {
+        navigate('/dashboard/editar-ubicacion');
     };
 
     const formatRole = (role) => {
@@ -84,7 +73,7 @@ const DashboardProfile = () => {
                                 icon="pi pi-map-marker"
                                 className="mt-3 px-4"
                                 severity="secondary"
-                                onClick={handleEditProfile}
+                                onClick={handleEditLocation}
                             />
                     </div>
                 ) : (

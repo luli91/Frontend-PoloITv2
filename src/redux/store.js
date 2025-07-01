@@ -5,6 +5,7 @@ import donacionesReducer from "./slices/donacionesSlice";
 import misPublicacionesReducer from "./slices/misPublicacionesSlice"
 import estadosReducer from "./slices/estadosSlice.js"
 import categoriasReducer from "./slices/categoriasSlice";
+import ubicacionReducer from './slices/ubicacionSlice';
 
 export const store = configureStore({
     reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
         misPublicaciones: misPublicacionesReducer,
         estados: estadosReducer,
         categorias: categoriasReducer,
+        ubicacion: ubicacionReducer,
     },
     devTools: process.env.NODE_ENV !== "production"
 });
