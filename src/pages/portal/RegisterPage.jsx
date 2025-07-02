@@ -11,6 +11,8 @@ import {InputText} from 'primereact/inputtext';
 import {Message} from 'primereact/message';
 import {ProgressSpinner} from 'primereact/progressspinner';
 import { useToast } from '../../hooks/useToast.jsx';
+import FormularioUbicacion from '../../components/FormularioUbicacion.jsx';
+
 
 export default function RegisterPage() {
     const toast = useToast(); // Usa el hook useToast
@@ -199,74 +201,35 @@ export default function RegisterPage() {
 
                     {/* DOMICILIO Y UBICACIÓN */}
                     <StepperPanel header="Domicilio y Ubicación">
-                        <div className="flex flex-column gap-5">
-                            <span className="p-float-label">
-                                <InputText
-                                    id="direccion"
-                                    name="direccion"
-                                    value={formData.direccion}
-                                    onChange={handleChange}
-                                    className={errors.direccion && 'p-invalid'}
-                                />
-                                <label htmlFor="direccion">Dirección</label>
-                                {errors.direccion && <small className="p-error">{errors.direccion}</small>}
-                            </span>
+  <FormularioUbicacion
+    formData={formData}
+    setFormData={setFormData}
+    errors={errors}
+  />
 
-                            <span className="p-float-label">
-                                <InputText
-                                    id="codigo_postal"
-                                    name="codigo_postal"
-                                    value={formData.codigo_postal}
-                                    onChange={handleChange}
-                                    className={errors.codigo_postal && 'p-invalid'}
-                                />
-                                <label htmlFor="codigo_postal">Código Postal</label>
-                                {errors.codigo_postal && <small className="p-error">{errors.codigo_postal}</small>}
-                            </span>
+  <div className="flex justify-content-between mt-4">
+    <Button
+      label="Volver"
+      icon="pi pi-arrow-left"
+      onClick={() => stepperRef.current.prevCallback()}
+      className="p-button-secondary"
+    />
+    <Button
+      label="Registrarse"
+      icon="pi pi-check"
+      onClick={handleRegisterSubmit}
+      disabled={loading}
+      className="p-button-primary"
+    />
+  </div>
 
-                            <span className="p-float-label">
-                                <InputText
-                                    id="ciudad"
-                                    name="ciudad"
-                                    value={formData.ciudad}
-                                    onChange={handleChange}
-                                    className={errors.ciudad && 'p-invalid'}
-                                />
-                                <label htmlFor="ciudad">Ciudad</label>
-                                {errors.ciudad && <small className="p-error">{errors.ciudad}</small>}
-                            </span>
+  {loading && (
+    <div className="flex justify-content-center mt-3">
+      <ProgressSpinner style={{ width: '40px', height: '40px' }} strokeWidth="5" />
+    </div>
+  )}
+</StepperPanel>
 
-                            <ProvinciaSelect
-                                value={formData.provincia}
-                                onChange={handleChange}
-                                error={!!errors.provincia}
-                                helperText={errors.provincia}
-                            />
-                        </div>
-
-                        <div className="flex justify-content-between mt-4">
-                            <Button
-                                label="Volver"
-                                icon="pi pi-arrow-left"
-                                onClick={() => stepperRef.current.prevCallback()}
-                                className="p-button-secondary"
-                            />
-                            <Button
-                                label="Registrarse"
-                                icon="pi pi-check"
-                                onClick={handleRegisterSubmit}
-                                disabled={loading}
-                                className="p-button-primary" // Añade esta clase para consistencia
-                            />
-
-                        </div>
-
-                        {loading && (
-                            <div className="flex justify-content-center mt-3">
-                                <ProgressSpinner style={{width: '40px', height: '40px'}} strokeWidth="5"/>
-                            </div>
-                        )}
-                    </StepperPanel>
                 </Stepper>
             </Card>
         </div>

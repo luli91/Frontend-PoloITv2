@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createContext, useContext, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { loginUser, logout, setAuthToken } from "../redux/slices/authSlice";
+import { loginUser, logout, setAuthToken, setUser as setUserRedux  } from "../redux/slices/authSlice";
 import { authService } from "../services/authServices.js";
 
 export const AuthContext = createContext();
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         setToken(storedToken);
         setUser(storedUser);
         dispatch(setAuthToken(storedToken));
-        dispatch(setUser(storedUser));
+        dispatch(setUserRedux(storedUser));
     }
 
     // Solo ejecuta checkAuth() si el usuario aún no está definido
@@ -78,35 +78,19 @@ export const AuthProvider = ({ children }) => {
         }
 
         console.log("🔎 Verificando autenticación con token:", token);
-
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (storedUser) {
-            setUser(storedUser);
-            setToken(token);
-
-            dispatch(setAuthToken(token)); 
-            dispatch(setUser(storedUser)); 
-            
-            console.log("✅ Usuario restaurado desde localStorage:", storedUser);
-            return true;
-        }
-
-        console.warn("⚠️ No se encontró usuario en localStorage, haciendo nueva solicitud...");
-        const userData = await authService.getProfile();
-        
-        if (userData) {
-            localStorage.setItem("user", JSON.stringify(userData));
-            setUser(userData);
-            setToken(token);
-
-            dispatch(setAuthToken(token));
-            dispatch(setUser(userData));
-            
-            console.log("✅ Usuario restaurado desde API:", userData);
-            return true;
-        }
+         const userData = await authService.getProfile();
+            if (userData) {
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
+      setToken(token);
+      dispatch(setAuthToken(token));
+      dispatch(setUserRedux(userData));
+      console.log("✅ Usuario actualizado desde API:", userData);
+      return true;
+    }
 
         return false;
+        
     } catch (error) {
         console.error("❌ Error verificando autenticación:", error);
         handleLogout();
